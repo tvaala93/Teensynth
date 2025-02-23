@@ -52,6 +52,6 @@
 
 int* pollAnalog();
 
-byte cfgPCA(int addr);
-byte cfg_ALL_PCA();
+uint8_t cfgPCA(int addr);
+uint8_t cfg_ALL_PCA();
 uint16_t read_pca(int addr);

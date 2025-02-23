@@ -11,7 +11,7 @@ int* pollAnalog() {
 }
 
 
-byte cfgPCA(int addr, int port0, int port1){
+uint8_t cfgPCA(int addr, int port0, int port1){
     //Clear output
   Wire.beginTransmission(addr);
   Wire.write(OUT_PORT_0);
@@ -28,7 +28,7 @@ byte cfgPCA(int addr, int port0, int port1){
 }
 
 
-byte cfg_ALL_PCA(){
+uint8_t cfg_ALL_PCA(){
     byte err = cfgPCA(ADDR_PCA0,PCA0_IO0,PCA0_IO1);
     if(err==0){
         err = cfgPCA(ADDR_PCA1,PCA1_IO0,PCA1_IO1);
