@@ -50,8 +50,46 @@
 #define OLED_ERR 200
 
 
-int* pollAnalog();
+class PCA9555{
+    private:        
+        uint8_t port0_cfg;
+        uint8_t port1_cfg;
+        uint16_t status;
+    public:
+        PCA9555(int address);
+        int addr;
+        bool check_aliveness();
+        bool config(uint8_t port0, uint8_t port1);
+        uint16_t get_status();
+        void read();
+};
 
-uint8_t cfgPCA(int addr);
-uint8_t cfg_ALL_PCA();
-uint16_t read_pca(int addr);
+
+// The array holds the value -1 for the entries where a position was decremented,
+// a 1 for the entries where the position was incremented
+// and 0 in all the other (no change or not valid) cases.
+const int8_t KNOBDIR[] = {
+    0, -1,  1,  0,
+    1,  0,  0, -1,
+   -1,  0,  0,  1,
+    0,  1, -1,  0  };
+
+class Encoder{
+    private:        
+        int8_t currState;
+        int8_t lastState;        
+        uint8_t port;
+        int8_t sigA;
+        int8_t sigB;
+        uint8_t pinA;
+        uint8_t pinB;
+        PCA9555& ioExpander;
+        int16_t knobPosn;
+    public:
+        Encoder(PCA9555& ioExp);
+        void config(uint8_t pinAA, uint8_t pinBB, uint8_t portt);
+        int16_t getPosn();
+        int16_t knobPosnExt;
+};
+
+int* pollAnalog();

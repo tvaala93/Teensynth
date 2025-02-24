@@ -30,6 +30,7 @@ int myFunction(int, int);
 
 void setup() {
   Serial.begin(9600);
+  Wire.begin();
   AudioMemory(20);
   sgtl5000_1.enable();
   sgtl5000_1.volume(0.32);
@@ -46,6 +47,8 @@ void setup() {
   mixer1.gain(0,1);
   mixer1.gain(1,1);
   mixer1.gain(2,1);  
+  uint8_t err = cfg_ALL_PCA();
+  Serial.println(err);
 }
 
 void loop() {
@@ -72,9 +75,4 @@ void loop() {
   waveform1.frequency(new_freq);
   waveform2.frequency(new_freq*1.5);
   waveform3.frequency(new_freq*2.0);
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
 }
