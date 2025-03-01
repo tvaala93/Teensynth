@@ -52,16 +52,16 @@
 
 class PCA9555{
     private:        
-        uint8_t port0_cfg;
-        uint8_t port1_cfg;
+        //uint8_t port0_cfg;
+        //uint8_t port1_cfg;
         uint16_t status;
     public:
         PCA9555(int address);
-        int addr;
-        bool check_aliveness();
+        int addr;        
+        bool checkAliveness();
         bool config(uint8_t port0, uint8_t port1);
-        uint16_t get_status();
-        void read();
+        uint16_t getStatus();
+        uint16_t read();        
 };
 
 
@@ -74,22 +74,38 @@ const int8_t KNOBDIR[] = {
    -1,  0,  0,  1,
     0,  1, -1,  0  };
 
+
 class Encoder{
     private:        
         int8_t currState;
         int8_t lastState;        
-        uint8_t port;
-        int8_t sigA;
-        int8_t sigB;
+        uint8_t port;        
         uint8_t pinA;
         uint8_t pinB;
+        uint8_t pinPush;
         PCA9555& ioExpander;
         int16_t knobPosn;
+        int8_t knobDir;        
     public:
         Encoder(PCA9555& ioExp);
-        void config(uint8_t pinAA, uint8_t pinBB, uint8_t portt);
+        void config(uint8_t pinAA, uint8_t pinBB, uint8_t pinCC, uint8_t portt);
         int16_t getPosn();
+        bool getButton();
+        int8_t getDir();
         int16_t knobPosnExt;
 };
 
+
+class TLED{
+    private:
+    PCA9555& ioExpander;
+    uint8_t pinLED;
+    uint8_t port;
+    public:
+        TLED(PCA9555& ioExp,uint8_t portt,uint8_t pin);
+        void write(bool isOn);    
+};
+
+
 int* pollAnalog();
+

@@ -2,6 +2,7 @@
 #include <cmath>
 using namespace std;
 
+// Frequencies
 #define C2 65.41
 #define D2 73.42
 #define E2 82.41

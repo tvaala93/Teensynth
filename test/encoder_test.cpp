@@ -35,11 +35,11 @@ void setup(){
     }
 
     //setup Encoders
-    navEnc.config(6,5,1);
-    bluEnc.config(1,2,1);
-    grnEnc.config(6,5,1);
-    ylwEnc.config(1,2,1);
-    ongEnc.config(7,6,1);
+    navEnc.config(6,5,4,1);
+    bluEnc.config(1,2,3,1);
+    grnEnc.config(6,5,4,1);
+    ylwEnc.config(1,2,3,1);
+    ongEnc.config(7,6,5,1);
 
 
     tick = millis();
