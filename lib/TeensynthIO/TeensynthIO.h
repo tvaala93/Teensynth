@@ -33,6 +33,8 @@
 #define PCA2_IO0 0b11111111
 #define PCA2_IO1 0b11100111
 
+#define UPDATE_MICROS 400
+
 /*  --  LEDs  --
  *   PCA1:
  *    - LED3 @IO07
@@ -42,22 +44,36 @@
  *    - LED2 @IO13
  */
 
-//TODO - Add functions for PCA9555 reads and writes
 
 // Error codes
 #define IO_ERR 1000
 #define PCA_ERR 100
 #define OLED_ERR 200
 
+//Key mapping
+const float pca0Map[] = {
+    4, 2, 1, 3, 5, 7, 8,10,
+    9,-1,-1,-1,-1,-1,-1, 6
+};
+const float pca1Map[] = {
+    12,13,28,27,26,25,-1,-1,
+    14,-1,-1,-1,-1,-1,-1,11
+};
+const float pca2Map[] = {
+    18,16,15,17,19,20,22,24,
+    21,23,-1,-1,-1,-1,-1,-1
+};
 
 class PCA9555{
     private:        
         //uint8_t port0_cfg;
         //uint8_t port1_cfg;
         uint16_t status;
+        elapsedMicros lastRead;
+        const float* keyMap;
     public:
-        PCA9555(int address);
-        int addr;        
+        PCA9555(int address, const float map[16]);
+        int addr;
         bool checkAliveness();
         bool config(uint8_t port0, uint8_t port1);
         uint16_t getStatus();
@@ -72,7 +88,8 @@ const int8_t KNOBDIR[] = {
     0, -1,  1,  0,
     1,  0,  0, -1,
    -1,  0,  0,  1,
-    0,  1, -1,  0  };
+    0,  1, -1,  0  
+};
 
 
 class Encoder{
@@ -85,14 +102,16 @@ class Encoder{
         uint8_t pinPush;
         PCA9555& ioExpander;
         int16_t knobPosn;
-        int8_t knobDir;        
+        int8_t knobDir;
     public:
         Encoder(PCA9555& ioExp);
         void config(uint8_t pinAA, uint8_t pinBB, uint8_t pinCC, uint8_t portt);
         int16_t getPosn();
         bool getButton();
         int8_t getDir();
-        int16_t knobPosnExt;
+        int knobPosnExt;
+        int prevPosnExt;
+        int8_t knobDirExt;
 };
 
 
@@ -108,4 +127,8 @@ class TLED{
 
 
 int* pollAnalog();
+
+const float keyLookup[] = {
+
+};
 

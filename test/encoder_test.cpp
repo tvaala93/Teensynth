@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <TeensynthIO.h>
 
-PCA9555 pca0(ADDR_PCA0);
-PCA9555 pca1(ADDR_PCA1);
-PCA9555 pca2(ADDR_PCA2);
+PCA9555 pca0(ADDR_PCA0,pca0Map);
+PCA9555 pca1(ADDR_PCA1,pca1Map);
+PCA9555 pca2(ADDR_PCA2,pca2Map);
 
 Encoder navEnc(pca0);
 Encoder bluEnc(pca0);
@@ -48,12 +48,14 @@ void setup(){
 
 void loop(){
 
-    start = micros();
+    start = micros();    
+    
     if(tick%1 == 0){
         pca0.read();
         pca1.read();
         pca2.read();
-    }
+    }    
+    
 
     /*
     if(tick % 5 == 0){
@@ -95,10 +97,10 @@ void loop(){
     tick = millis();
     finish = micros();
 
-    if(finish - start > 400){
-        Serial.println("This is taking too long...");
+    if(finish - start > UPDATE_MICROS){
+        Serial.print("This is taking too long... ");
         Serial.println(finish-start);
-        exit(0);
+        //exit(0);
     }
 
 }

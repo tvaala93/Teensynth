@@ -5,8 +5,10 @@
  * 
  * @param address the i2c address of the specific physical PCA9555
  */
-PCA9555::PCA9555(int address) {
+PCA9555::PCA9555(int address, const float mapp[16]) {
   addr = address;
+  lastRead = 0;
+  keyMap = mapp;
 }
 
   /**
@@ -65,6 +67,7 @@ PCA9555::PCA9555(int address) {
       data |= Wire.read();
     }
     status = data;
+    lastRead = micros();
     return data;
   }
 
@@ -88,7 +91,12 @@ PCA9555::PCA9555(int address) {
    * 
    * @return The status of all 16 IO bits, msb-first. Bits 0-7 are Port 0; 8-15 are Port 1. 
    */
-  uint16_t PCA9555::getStatus(){
+  uint16_t PCA9555::getStatus(){    
+    /*
+    if(micros()-lastRead > UPDATE_MICROS){
+      return read();
+    }
+    */   
     return status;
   }
   
@@ -101,6 +109,8 @@ PCA9555::PCA9555(int address) {
 Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
   knobPosn = 0;
   knobPosnExt = 0;
+  knobDirExt = 0;
+  prevPosnExt = 0;
   ioExpander = ioExp;
   lastState = 0; // just as a default
 }
@@ -143,9 +153,9 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
       knobPosn += knobDir;
       lastState = currState;
       if(currState == 3){
-        knobPosnExt = knobPosn >> 2;
+        knobPosnExt = knobPosn >> 2;        
       }
-    }    
+    }
     
     return knobPosnExt;
   }
@@ -161,7 +171,18 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
   }
 
   int8_t Encoder::getDir(){
-    return knobDir;
+    int8_t ret = 0;
+    Serial.print("PrevPosn: ");
+    Serial.println(prevPosnExt);
+    Serial.print("KnobPosn: ");
+    Serial.println(knobPosnExt);
+    if (prevPosnExt > knobPosnExt) {
+      ret = -1;      
+    } else if (prevPosnExt < knobPosnExt) {
+      ret = 1;
+    }
+    prevPosnExt = knobPosnExt;
+    return ret;    
   }
 
 
@@ -184,7 +205,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    * @param isOn a bool specifying if the LED should be on
    */
   void TLED::write(bool isOn){
-    uint16_t state = ioExpander.read();
+    uint16_t state = ioExpander.getStatus();
     Wire.beginTransmission(ioExpander.addr);
     if(port==0){
       state = state & 0xFF;
