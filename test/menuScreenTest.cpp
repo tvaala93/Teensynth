@@ -58,7 +58,6 @@ unsigned char menuLength = 8;
 
 // End setup menu screens -------------------------------------------------------------------------
 
-
 elapsedMillis tick;
 elapsedMicros utick;
 uint32_t start;

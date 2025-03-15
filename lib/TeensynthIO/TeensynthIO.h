@@ -1,4 +1,4 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <Wire.h>
 
 // Analog Inputs
@@ -51,32 +51,36 @@
 #define OLED_ERR 200
 
 //Key mapping
-const float pca0Map[] = {
+const int8_t pca0Map[] = {
     4, 2, 1, 3, 5, 7, 8,10,
     9,-1,-1,-1,-1,-1,-1, 6
 };
-const float pca1Map[] = {
+const int8_t pca1Map[] = {
     12,13,28,27,26,25,-1,-1,
     14,-1,-1,-1,-1,-1,-1,11
 };
-const float pca2Map[] = {
+const int8_t pca2Map[] = {
     18,16,15,17,19,20,22,24,
     21,23,-1,-1,-1,-1,-1,-1
 };
+
 
 class PCA9555{
     private:        
         //uint8_t port0_cfg;
         //uint8_t port1_cfg;
-        uint16_t status;
-        elapsedMicros lastRead;
-        const float* keyMap;
+        //uint16_t status;
+        //uint16_t lastStatus;
+        //elapsedMicros lastRead;
+        //const int8_t* keyMap;
     public:
-        PCA9555(int address, const float map[16]);
+        PCA9555(int address);
         int addr;
+        uint16_t status;
+        //uint16_t lastStatus;        
         bool checkAliveness();
         bool config(uint8_t port0, uint8_t port1);
-        uint16_t getStatus();
+        //uint16_t getStatus();
         uint16_t read();        
 };
 
@@ -90,7 +94,6 @@ const int8_t KNOBDIR[] = {
    -1,  0,  0,  1,
     0,  1, -1,  0  
 };
-
 
 class Encoder{
     private:        
@@ -117,18 +120,41 @@ class Encoder{
 
 class TLED{
     private:
-    PCA9555& ioExpander;
-    uint8_t pinLED;
-    uint8_t port;
+        PCA9555& ioExpander;
+        uint8_t pinLED;
+        uint8_t port;
     public:
         TLED(PCA9555& ioExp,uint8_t portt,uint8_t pin);
         void write(bool isOn);    
 };
 
-
+/*
 int* pollAnalog();
 
 const float keyLookup[] = {
 
 };
+*/
 
+class Keyboard{
+    private:
+        uint16_t last0 ; // Value of last tracked read from PCA0
+        uint16_t press0; // Tracks buttons that were just pressed
+        uint16_t rel0; // Tracks buttons that were just released
+        uint16_t last1; // Value of last tracked read from PCA1
+        uint16_t press1; // Tracks buttons that were just pressed
+        uint16_t rel1; // Tracks buttons that were just released
+        uint16_t last2; // Value of last tracked read from PCA2
+        uint16_t press2; // Tracks buttons that were just pressed
+        uint16_t rel2; // Tracks buttons that were just released
+    public:
+        Keyboard();
+        void update();
+        void key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2);
+        int8_t press_buf[256];
+        int8_t rel_buf[256];
+        uint8_t pb_rptr; // read pointer
+        uint8_t pb_wptr; // write pointer        
+        uint8_t rb_rptr; // read pointer
+        uint8_t rb_wptr; // write pointer
+};

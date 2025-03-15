@@ -5,10 +5,9 @@
  * 
  * @param address the i2c address of the specific physical PCA9555
  */
-PCA9555::PCA9555(int address, const float mapp[16]) {
+PCA9555::PCA9555(int address) {
   addr = address;
-  lastRead = 0;
-  keyMap = mapp;
+  //lastRead = 0;  
 }
 
   /**
@@ -52,6 +51,8 @@ PCA9555::PCA9555(int address, const float mapp[16]) {
    * This function makes the required i2c calls to get the current state
    * of both input ports on the PCA9555 chip. 
    * The status parameter of the class is then updated.
+   * 
+   * @return the 16 bits of the PCA state
    */
   uint16_t PCA9555::read(){
     uint16_t data = 0xDEAD;
@@ -66,8 +67,11 @@ PCA9555::PCA9555(int address, const float mapp[16]) {
       data = data << 8;
       data |= Wire.read();
     }
+    //lastStatus = status; // store values from last read
     status = data;
-    lastRead = micros();
+    //pressed = lastStatus & ~status;
+    //released = ~lastStatus & status;
+    //lastRead = micros();
     return data;
   }
 
@@ -91,14 +95,16 @@ PCA9555::PCA9555(int address, const float mapp[16]) {
    * 
    * @return The status of all 16 IO bits, msb-first. Bits 0-7 are Port 0; 8-15 are Port 1. 
    */
-  uint16_t PCA9555::getStatus(){    
+  
+//   uint16_t PCA9555::getStatus(){    
     /*
     if(micros()-lastRead > UPDATE_MICROS){
       return read();
     }
     */   
-    return status;
-  }
+//    return status;
+//  }
+  
   
 
 /**
@@ -141,7 +147,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    */
   int16_t Encoder::getPosn(){
     //TODO get sigA and sigB
-    uint16_t data =  ioExpander.getStatus();
+    uint16_t data =  ioExpander.status;
     //Serial.print("getPosn data: ");
     //Serial.println(data,BIN);
     uint8_t sigA = (data >> (pinA + (port << 3))) & 1;
@@ -166,16 +172,18 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    * @return bool indicating if 
    */
   bool Encoder::getButton(){
-    uint16_t data =  ~ioExpander.getStatus();
+    uint16_t data =  ~(ioExpander.status);
     return (data >> (pinPush + (port <<3))) & 1;
   }
 
   int8_t Encoder::getDir(){
     int8_t ret = 0;
+    /*
     Serial.print("PrevPosn: ");
     Serial.println(prevPosnExt);
     Serial.print("KnobPosn: ");
     Serial.println(knobPosnExt);
+    */
     if (prevPosnExt > knobPosnExt) {
       ret = -1;      
     } else if (prevPosnExt < knobPosnExt) {
@@ -205,7 +213,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    * @param isOn a bool specifying if the LED should be on
    */
   void TLED::write(bool isOn){
-    uint16_t state = ioExpander.getStatus();
+    uint16_t state = ioExpander.status;
     Wire.beginTransmission(ioExpander.addr);
     if(port==0){
       state = state & 0xFF;
@@ -220,3 +228,51 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
     Wire.endTransmission();
   }
 
+
+Keyboard::Keyboard(){  
+  pb_rptr = 0; // read pointer
+  pb_wptr = 0; // write pointer
+  
+  rb_rptr = 0; // read pointer
+  rb_wptr = 0; // write pointer
+
+  last0 = 0; // Value of last tracked read from PCA0
+  press0 = 0; // Tracks buttons that were just pressed
+  rel0 = 0; // Tracks buttons that were just released
+
+  last1 = 0; // Value of last tracked read from PCA1
+  press1 = 0; // Tracks buttons that were just pressed
+  rel1 = 0; // Tracks buttons that were just released
+
+  last2 = 0; // Value of last tracked read from PCA2
+  press2 = 0; // Tracks buttons that were just pressed
+  rel2 = 0; // Tracks buttons that were just released
+}
+
+  void Keyboard::update(){
+
+  }
+
+  void Keyboard::key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2){
+      press0 = last0 & ~stat0;
+      rel0 = ~last0 & stat0;
+      last0 = stat0;
+
+      press1 = last1 & ~stat1;
+      rel1 = ~last1 & stat1;
+      last1 = stat1;
+
+      press2 = last2 & ~stat2;
+      rel2 = ~last2 & stat2;
+      last2 = stat2;
+
+      for(int i=0;i<16;i++){
+          if((press0 >> i) & 1){press_buf[pb_wptr] = pca0Map[i]; pb_wptr++;}
+          if((press1 >> i) & 1){press_buf[pb_wptr] = pca1Map[i]; pb_wptr++;}
+          if((press2 >> i) & 1){press_buf[pb_wptr] = pca2Map[i]; pb_wptr++;}
+
+          if((rel0 >> i) & 1){rel_buf[rb_wptr] = pca0Map[i]; rb_wptr++;}
+          if((rel1 >> i) & 1){rel_buf[rb_wptr] = pca1Map[i]; rb_wptr++;}
+          if((rel2 >> i) & 1){rel_buf[rb_wptr] = pca2Map[i]; rb_wptr++;}
+      }
+  }    
