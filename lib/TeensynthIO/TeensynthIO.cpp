@@ -94,16 +94,24 @@ PCA9555::PCA9555(int address) {
    * @brief Provides read-only access to the PCA's input registers
    * 
    * @return The status of all 16 IO bits, msb-first. Bits 0-7 are Port 0; 8-15 are Port 1. 
-   */
-  
-//   uint16_t PCA9555::getStatus(){    
+   */  
+   uint16_t PCA9555::getStatus(){    
     /*
     if(micros()-lastRead > UPDATE_MICROS){
       return read();
     }
     */   
-//    return status;
-//  }
+      return status;
+    }
+
+    /**
+     * @brief Provides read-only access to the PCA's i2c address
+     * 
+     * @return the PCA's i2c address
+     */
+    uint8_t PCA9555::getAddr(){
+      return addr;
+    }
   
   
 
@@ -147,7 +155,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    */
   int16_t Encoder::getPosn(){
     //TODO get sigA and sigB
-    uint16_t data =  ioExpander.status;
+    uint16_t data =  ioExpander.getStatus();
     //Serial.print("getPosn data: ");
     //Serial.println(data,BIN);
     uint8_t sigA = (data >> (pinA + (port << 3))) & 1;
@@ -172,7 +180,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    * @return bool indicating if 
    */
   bool Encoder::getButton(){
-    uint16_t data =  ~(ioExpander.status);
+    uint16_t data =  ~(ioExpander.getStatus());
     return (data >> (pinPush + (port <<3))) & 1;
   }
 
@@ -213,8 +221,8 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
    * @param isOn a bool specifying if the LED should be on
    */
   void TLED::write(bool isOn){
-    uint16_t state = ioExpander.status;
-    Wire.beginTransmission(ioExpander.addr);
+    uint16_t state = ioExpander.getStatus();
+    Wire.beginTransmission(ioExpander.getAddr());
     if(port==0){
       state = state & 0xFF;
       Wire.write(OUT_PORT_0);

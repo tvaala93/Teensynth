@@ -73,14 +73,15 @@ class PCA9555{
         //uint16_t lastStatus;
         //elapsedMicros lastRead;
         //const int8_t* keyMap;
-    public:
-        PCA9555(int address);
         int addr;
         uint16_t status;
+    public:
+        PCA9555(int address);        
         //uint16_t lastStatus;        
         bool checkAliveness();
         bool config(uint8_t port0, uint8_t port1);
-        //uint16_t getStatus();
+        uint16_t getStatus();
+        uint8_t getAddr();
         uint16_t read();        
 };
 
@@ -106,15 +107,15 @@ class Encoder{
         PCA9555& ioExpander;
         int16_t knobPosn;
         int8_t knobDir;
+        int knobPosnExt;
+        int prevPosnExt;
+        int8_t knobDirExt;
     public:
         Encoder(PCA9555& ioExp);
         void config(uint8_t pinAA, uint8_t pinBB, uint8_t pinCC, uint8_t portt);
         int16_t getPosn();
         bool getButton();
-        int8_t getDir();
-        int knobPosnExt;
-        int prevPosnExt;
-        int8_t knobDirExt;
+        int8_t getDir();        
 };
 
 
@@ -147,14 +148,14 @@ class Keyboard{
         uint16_t last2; // Value of last tracked read from PCA2
         uint16_t press2; // Tracks buttons that were just pressed
         uint16_t rel2; // Tracks buttons that were just released
-    public:
-        Keyboard();
-        void update();
-        void key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2);
         int8_t press_buf[256];
         int8_t rel_buf[256];
         uint8_t pb_rptr; // read pointer
         uint8_t pb_wptr; // write pointer        
         uint8_t rb_rptr; // read pointer
         uint8_t rb_wptr; // write pointer
+    public:
+        Keyboard();
+        void update();
+        void key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2);        
 };

@@ -1,8 +1,8 @@
 #include <MenusOLED.h>
 
-MenusOLED::MenusOLED(String namee, Adafruit_SSD1306& displayy, /*unsigned char index*/ const unsigned char* logo) : display(displayy)
+MenusOLED::MenusOLED(String name, Adafruit_SSD1306& displayy, const unsigned char* logo) : display(displayy)
 {
-    menuName = namee;
+    menuName = name;
     //parent = parentt;
     display = displayy;
     if(logo!=NULL){
@@ -10,6 +10,7 @@ MenusOLED::MenusOLED(String namee, Adafruit_SSD1306& displayy, /*unsigned char i
     }else{
         menuLogo = NULL;
     }
+    parent = NULL;
 }
 
 void MenusOLED::show(){
@@ -26,6 +27,7 @@ void MenusOLED::show(){
     display.print(menuName);
 
     // Print Arrows
+    // TODO add logic around arrow displays
     display.setCursor(1,1);
     display.write(0x11);
     display.setCursor(122,1);
@@ -43,6 +45,14 @@ void MenusOLED::show(){
     }
     display.display();    
 }
+
+ void MenusOLED::setParent(MenusOLED* par){
+    parent = par;
+ }
+
+ void MenusOLED::setChild(MenusOLED* chile){
+    child = chile;
+ }
 
 MenusOLED::~MenusOLED()
 {

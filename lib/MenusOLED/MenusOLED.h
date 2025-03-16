@@ -155,17 +155,20 @@ const unsigned char teensynthlogo [] PROGMEM = {
 
 class MenusOLED{
     private:    
-        String menuName;
-        //MenusOLED& parent;
+        String menuName;        
         Adafruit_SSD1306& display;        
         unsigned char spriteIndex;
         //unsigned char w;
         //unsigned char h;
         const unsigned char* menuLogo;
+        MenusOLED* parent;
+        MenusOLED* child;
     public:
-        MenusOLED(String name, /*MenusOLED& parentt,*/ Adafruit_SSD1306& displayy, /*unsigned char index*/ const unsigned char* logo);
+        MenusOLED(String name, Adafruit_SSD1306& displayy, const unsigned char* logo);
         ~MenusOLED();
         void show();
+        void setParent(MenusOLED* par);
+        void setChild(MenusOLED* chile);        
         //void setupLogo(const unsigned char *bmp[16],unsigned char width,unsigned char height);
 };
 
