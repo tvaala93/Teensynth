@@ -90,35 +90,6 @@ void pca_handler(elapsedMicros uptick){
     }
 }
 
-
-void press_handler(){
-    switch(KB.press_buf[KB.pb_rptr]){
-        case -1:
-            break;
-        case 25: case 26: case 27: case 28:
-            String dispval = String(KB.press_buf[KB.pb_rptr]);
-            display.setCursor(56,28);
-            display.print(dispval);
-            display.display();
-    }
-    KB.pb_rptr++;
-}
-
-
-void release_handler(){
-    switch(KB.rel_buf[KB.rb_rptr]){
-        case -1:
-            break;
-        case 25: case 26: case 27: case 28:
-            break;
-        default:
-            //Serial.println("Unhandled");
-            break;
-    }
-    KB.rb_rptr++;
-}
-
-
 void encoder_handler(elapsedMillis eTick){
     // Encoder read hanling
     switch (eTick % 5){
@@ -150,6 +121,12 @@ void encoder_handler(elapsedMillis eTick){
             break;    
         default:
             break;
+    }
+}
+
+void key_handler(elapsedMillis kTick){
+    if(kTick % 50 == 0){
+        KB.update(pca0.getStatus(),pca1.getStatus(),pca2.getStatus());
     }
 }
 
@@ -202,12 +179,9 @@ void loop(){
     
     pca_handler(utick);
     encoder_handler(tick);
-    if(tick % 50 == 0){
-        KB.key_handler(pca0.status,pca1.status,pca2.status);
-    }
-
-    if(KB.pb_rptr != KB.pb_wptr){press_handler();}
-    if(KB.rb_rptr != KB.rb_wptr){release_handler();}
+    key_handler(tick);
+    
+    KB.sync();
 
     // Timing -------------------------------------------------------------------------------------
     

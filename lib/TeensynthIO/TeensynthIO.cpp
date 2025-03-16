@@ -257,11 +257,13 @@ Keyboard::Keyboard(){
   rel2 = 0; // Tracks buttons that were just released
 }
 
-  void Keyboard::update(){
+  void Keyboard::sync(){
+    if(pb_rptr != pb_wptr){pressHandler();}
+    if(rb_rptr != rb_wptr){releaseHandler();}
 
   }
 
-  void Keyboard::key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2){
+  void Keyboard::update(uint16_t stat0, uint16_t stat1, uint16_t stat2){
       press0 = last0 & ~stat0;
       rel0 = ~last0 & stat0;
       last0 = stat0;
@@ -283,4 +285,24 @@ Keyboard::Keyboard(){
           if((rel1 >> i) & 1){rel_buf[rb_wptr] = pca1Map[i]; rb_wptr++;}
           if((rel2 >> i) & 1){rel_buf[rb_wptr] = pca2Map[i]; rb_wptr++;}
       }
-  }    
+  }
+  
+  int Keyboard::pressHandler(){
+    int retVal = press_buf[pb_rptr];
+    pb_rptr++;
+    return retVal;
+}
+  
+  int Keyboard::releaseHandler(){
+    switch(rel_buf[rb_rptr]){
+        case -1:
+            break;
+        case 25: case 26: case 27: case 28:
+            break;
+        default:
+            //Serial.println("Unhandled");
+            break;
+    }
+    rb_rptr++;
+    return 0;
+}

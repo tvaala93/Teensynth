@@ -156,6 +156,8 @@ class Keyboard{
         uint8_t rb_wptr; // write pointer
     public:
         Keyboard();
-        void update();
-        void key_handler(uint16_t stat0, uint16_t stat1, uint16_t stat2);        
+        void sync();
+        void update(uint16_t stat0, uint16_t stat1, uint16_t stat2);
+        int pressHandler();
+        int releaseHandler();
 };
