@@ -17,9 +17,9 @@ String revision_string = "v0.1\nrev: 3.02.25";
 // ================================================================================================
 // Standard hardware IO. Do not change without good reason
 // ================================================================================================
-PCA9555 pca0(ADDR_PCA0,pca0Map);
-PCA9555 pca1(ADDR_PCA1,pca1Map);
-PCA9555 pca2(ADDR_PCA2,pca2Map);
+PCA9555 pca0(ADDR_PCA0);
+PCA9555 pca1(ADDR_PCA1);
+PCA9555 pca2(ADDR_PCA2);
 
 Encoder navEnc(pca0);
 Encoder bluEnc(pca0);
@@ -35,13 +35,17 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // ================================================================================================
 // Setup Menu screens
 // ================================================================================================
+
+String oscOptions[] = {"CONFIG","ADD","DELETE","ROUTE","ANOTHER","MORE","",""};
+String envOptions[] = {"CONFIG","ADD","DELETE","ROUTE","ANOTHER","","",""};
+
 MenusOLED menuHome("HOME", display,homeBMP);
 MenusOLED menuKeys("KEYS", display,keysBMP);
-MenusOLED menuOSC("OSCILLATORS", display,oscBMP);
+MenusOLED menuOSC(MODE_TEXT,"OSCILLATORS", display,oscBMP, oscOptions);
 MenusOLED menuNSH("NOISE, S&H", display,noiseSHBMP);
 MenusOLED menuMIX("MIXER", display,mixBMP);
 MenusOLED menuFLT("FILTER", display,fltBMP);
-MenusOLED menuENV("ENVELOPE", display,envBMP);
+MenusOLED menuENV(MODE_TEXT,"ENVELOPE", display,envBMP, envOptions);
 MenusOLED menuEFF("EFFECTS", display,keysBMP);
 MenusOLED menuArr[] = {
   menuHome,
@@ -53,8 +57,11 @@ MenusOLED menuArr[] = {
   menuENV,
   menuEFF
 };
+//MenusOLED* currMenu;
 unsigned char menuIndex = 0;
 unsigned char menuLength = 8;
+
+uint8_t navMode = NAV_DEFAULT;
 
 // End setup menu screens -------------------------------------------------------------------------
 
@@ -63,10 +70,78 @@ elapsedMicros utick;
 uint32_t start;
 uint32_t finish;
 
+int8_t dir;
+
+void pcaHandler(elapsedMicros uptick){
+    switch(utick % 1500){
+        case 0:
+            pca0.read();
+            break;
+        case 500:
+            pca1.read();
+            break;
+        case 1000:
+            pca2.read();
+            break;
+        default:
+            break;
+    }
+}
+
+void encoderHandler(elapsedMillis eTick){
+    // Encoder read hanling
+    
+    switch (eTick % 5){
+        case 0:
+            //Serial.println(navEnc.getPosn());
+            
+            navEnc.getPosn();            
+            dir = navEnc.getDir();
+            // Serial.println(dir);
+            
+            if(dir!=0){            
+                if(menuIndex==0 && dir==-1){menuIndex = menuLength -1;}
+                else if(menuIndex==menuLength-1 && dir==1){menuIndex = 0;}
+                else{menuIndex+=dir;}
+                menuArr[menuIndex].show(SSD1306_WHITE);                
+            }
+            break;
+        
+        case 1:            
+            bluEnc.getPosn();
+            break;
+        case 2:            
+            grnEnc.getPosn();
+            
+            break;
+        case 3:            
+            ylwEnc.getPosn();
+            break;
+        case 4:            
+            ongEnc.getPosn();            
+            break;    
+        default:
+            break;
+    }
+}
+
+void keyButtonHandler(elapsedMillis kTick){
+    if(kTick % 50 == 0){
+        if(navEnc.getButton()){
+            Serial.println("black button");
+            menuArr[menuIndex].activate();
+        }
+        else if(ongEnc.getButton()){
+            menuArr[menuIndex].deactivate();
+            Serial.println("orange button");
+        }
+    }
+}
+
 
 void setup() {
     Serial.begin(9600);
-    //while(!Serial);
+    while(!Serial);
     Wire.begin();
 
     //setup PCAs    
@@ -101,58 +176,25 @@ void setup() {
     delay(3000);
     
     display.clearDisplay();
-    menuHome.show();
+    menuHome.show(SSD1306_WHITE);
+    //menuOSC.show();
+    //menuOSC.showText();
     //display.clearDisplay();
     tick = millis();
     utick = micros();
-    
+    Serial.println("Setup complete!");
 }
 
 void loop(){
     
-    //start = micros();    
-    
-    if(tick%1 == 0){
-        pca0.read();
-        pca1.read();
-        pca2.read();
-    }
-    
-    switch (tick % 5)
-    {
-    case 0:
-        {
-        //Serial.println(navEnc.getPosn());
-        navEnc.getPosn();
-        int8_t dir = navEnc.getDir();
-        // Serial.println(dir);
-        if(dir!=0){        
-          
-          if(menuIndex==0 && dir==-1){menuIndex = menuLength -1;}
-          else if(menuIndex==menuLength-1 && dir==1){menuIndex = 0;}
-          else{menuIndex+=dir;}
-          Serial.println(dir);
-          menuArr[menuIndex].show();          
-        }
-        break;
-      }
-    case 1:
-        //Serial.println(bluEnc.getPosn());
-        break;
-    case 2:
-        //Serial.println(grnEnc.getPosn());
-        break;
-    case 3:
-        //Serial.println(ylwEnc.getPosn());
-        break;
-    case 4:
-        //Serial.println(ongEnc.getPosn());
-        break;    
-    default:
-        break;
-    }
+    //start = micros();
+        
+    pcaHandler(utick);
+    encoderHandler(tick);
+    keyButtonHandler(tick);
     
     tick = millis();
+    utick = micros();
     //finish = micros();
 
     //if(finish - start > UPDATE_MICROS){

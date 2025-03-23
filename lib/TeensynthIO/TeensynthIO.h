@@ -34,6 +34,7 @@
 #define PCA2_IO1 0b11100111
 
 #define UPDATE_MICROS 400
+#define DEBOUNCE_DELAY 200 // ms
 
 /*  --  LEDs  --
  *   PCA1:
@@ -99,7 +100,10 @@ const int8_t KNOBDIR[] = {
 class Encoder{
     private:        
         int8_t currState;
-        int8_t lastState;        
+        int8_t lastState;
+        //int8_t currButton;
+        int8_t lastButton;        
+        //elapsedMillis lastDebounce;
         uint8_t port;        
         uint8_t pinA;
         uint8_t pinB;
@@ -109,7 +113,7 @@ class Encoder{
         int8_t knobDir;
         int knobPosnExt;
         int prevPosnExt;
-        int8_t knobDirExt;
+        int8_t knobDirExt;        
     public:
         Encoder(PCA9555& ioExp);
         void config(uint8_t pinAA, uint8_t pinBB, uint8_t pinCC, uint8_t portt);

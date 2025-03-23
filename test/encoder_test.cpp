@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <TeensynthIO.h>
 
-PCA9555 pca0(ADDR_PCA0,pca0Map);
-PCA9555 pca1(ADDR_PCA1,pca1Map);
-PCA9555 pca2(ADDR_PCA2,pca2Map);
+PCA9555 pca0(ADDR_PCA0);
+PCA9555 pca1(ADDR_PCA1);
+PCA9555 pca2(ADDR_PCA2);
 
 Encoder navEnc(pca0);
 Encoder bluEnc(pca0);

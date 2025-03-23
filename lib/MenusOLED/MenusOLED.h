@@ -2,12 +2,23 @@
 //#include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <typeinfo>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3C for 128x64, 0x3D for 128x32
+
+#define NUM_OPTIONS 16 // Number of options allowed in a text menu by default
+
+#define MODE_TEXT 0x54 // Ascii 'T'
+#define MODE_GRAPHIC 0x47 // Ascii 'G'
+#define MODE_OTHER 0x4F // Ascii 'O'
+
+#define NAV_DEFAULT 0 // Horizontal scrolling
+#define NAV_TEXT 1 // Vertical scrolling for text menus
+#define NAV_GRAPH 2 // TBD for graphic menus
 
 // ================================================================================================
 // 8x16 pixel sprites
@@ -154,29 +165,57 @@ const unsigned char teensynthlogo [] PROGMEM = {
 
 
 class MenusOLED{
-    private:    
-        String menuName;        
+    protected:    
+        String menuName;
+        String* optionList;        
         Adafruit_SSD1306& display;        
-        unsigned char spriteIndex;
+        //unsigned char spriteIndex;
         //unsigned char w;
         //unsigned char h;
+        uint8_t mode;
+        int8_t textOffset;
         const unsigned char* menuLogo;
         MenusOLED* parent;
         MenusOLED* child;
+        
+        bool isActive;
     public:
-        MenusOLED(String name, Adafruit_SSD1306& displayy, const unsigned char* logo);
-        ~MenusOLED();
-        void show();
+        MenusOLED(
+            String name, 
+            Adafruit_SSD1306& displayy, 
+            const unsigned char* logo
+        );
+        MenusOLED(
+            uint8_t modee,
+            String name, 
+            Adafruit_SSD1306& displayy, 
+            const unsigned char* logo,
+            String* options
+        );
+        virtual void show(bool color);        
+        virtual void showText();
+        void showGraphic();
         void setParent(MenusOLED* par);
-        void setChild(MenusOLED* chile);        
-        //void setupLogo(const unsigned char *bmp[16],unsigned char width,unsigned char height);
+        void setChild(MenusOLED* chile);
+        void activate();
+        void deactivate();
+        void highlight(int8_t i);
+        ~MenusOLED();
 };
 
-
+/*
 class TextMenu: public MenusOLED{
     private:
+        String* optionList;
     public:
-        TextMenu(String name, Adafruit_SSD1306& displayy);
+        TextMenu(            
+            String name, 
+            Adafruit_SSD1306& displayy, 
+            const unsigned char* logo,
+            String* options);//: MenusOLED(name,displayy,logo){};
+        
+        void showText() override;
+        //void show(bool color) override;
 };
 
 
@@ -184,3 +223,4 @@ class GraphicMenu: public MenusOLED{
     private:
     public:
 };
+*/

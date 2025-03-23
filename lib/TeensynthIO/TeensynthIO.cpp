@@ -127,6 +127,7 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
   prevPosnExt = 0;
   ioExpander = ioExp;
   lastState = 0; // just as a default
+  lastButton = LOW;  
 }
 
   /**
@@ -171,27 +172,33 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
       }
     }
     
+
     return knobPosnExt;
   }
 
   /**
    * @brief Function to provide the status of the encoder's button
    * 
-   * @return bool indicating if 
+   * @return bool indicating if a rising edge has occurred
    */
   bool Encoder::getButton(){
+        
+    // Read state of button
     uint16_t data =  ~(ioExpander.getStatus());
-    return (data >> (pinPush + (port <<3))) & 1;
+    bool reading = (data >> (pinPush + (port <<3))) & 1;
+    
+    bool pressed = lastButton & !reading;    
+    lastButton = reading;
+    return pressed;
   }
 
+  /**
+   * @brief Function to provide direction encode is turning
+   * 
+   * @return int denoting direction. -1=CCW, 0=Still, 1=CW
+   */
   int8_t Encoder::getDir(){
-    int8_t ret = 0;
-    /*
-    Serial.print("PrevPosn: ");
-    Serial.println(prevPosnExt);
-    Serial.print("KnobPosn: ");
-    Serial.println(knobPosnExt);
-    */
+    int8_t ret = 0;    
     if (prevPosnExt > knobPosnExt) {
       ret = -1;      
     } else if (prevPosnExt < knobPosnExt) {
@@ -236,7 +243,9 @@ Encoder::Encoder(PCA9555& ioExp): ioExpander(ioExp){
     Wire.endTransmission();
   }
 
-
+/**
+ * @brief constructor for a keyboard container object
+ */
 Keyboard::Keyboard(){  
   pb_rptr = 0; // read pointer
   pb_wptr = 0; // write pointer
@@ -257,12 +266,26 @@ Keyboard::Keyboard(){
   rel2 = 0; // Tracks buttons that were just released
 }
 
+  /**
+   * @brief This function calls a pressHanlder or releaseHandler 
+   * if there is a new event in either buffer
+   */
   void Keyboard::sync(){
     if(pb_rptr != pb_wptr){pressHandler();}
     if(rb_rptr != rb_wptr){releaseHandler();}
-
   }
 
+  /**
+   * @brief Funtion to check which buttons have been pressed/released in the last scan
+   * 
+   * Release and Press Buffers are updated based on diff b/w current and last value
+   * Read pointers are updated each time a new event is added to a buffer
+   * Buttons are debounced based on how frequently this function is called
+   * 
+   * @param stat0 Status/last read of PCA0
+   * @param stat1 Status/last read of PCA1
+   * @param stat2 Status/last read of PCA2
+   */
   void Keyboard::update(uint16_t stat0, uint16_t stat1, uint16_t stat2){
       press0 = last0 & ~stat0;
       rel0 = ~last0 & stat0;
