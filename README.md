@@ -1,5 +1,5 @@
 # Teensynth Sourcecode
-Updated 2/28/2025
+Updated 3/31/2025
 
 ## Contents  
 - [TODO](#todo)
@@ -7,16 +7,21 @@ Updated 2/28/2025
 - [Modules](#modules)
 - [Error Codes](#error-codes)
 
-## IO Validation TODOs
+## TODO - Cleanup and Optimize
+- [ ] Cleanup / optimize menu system into more of a tree system
+- [ ] Cleanup / optimize io library for faster access
+- [ ] Cleanup / optimize setup functions
+
+## IO Validation -- COMPLETE
 - [X] Initial power-up from micro-USB
 - [X] Full stack sound board test; do I get startup tone on initial power?
 - [X] Analog read for volume control
 - [X] Analog read for filter control
 - [X] OLED display test w/ Adafruit demo
 - [X] I2C LED control/ blinkenlights
-- [ ] I2C Keyboard input: serial display
-- [ ] I2C Keyboard input: OLED display
-- [ ] I2C Encoder input: OLED display
+- [x] I2C Keyboard input: serial display
+- [x] I2C Keyboard input: OLED display
+- [x] I2C Encoder input: OLED display
 
 ## Usage
 
