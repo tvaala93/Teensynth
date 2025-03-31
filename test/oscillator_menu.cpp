@@ -11,8 +11,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-String revision_string = "v0.1\nrev: 3.02.25";
-
 
 // ================================================================================================
 // Standard hardware IO. Do not change without good reason
@@ -41,7 +39,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Setup Menu screens
 // ================================================================================================
 
-String oscOptions[] = {"CONFIG","ADD","DELETE","ROUTE","ANOTHER","MORE","MOAR","LAST","","","","","","","",""};
+String oscOptions[] = {"ZERO","ONE","TWO","THREE","FOUR","FIVE","SIX","SEVEN","","","","","","","",""};
 String envOptions[] = {"CONFIG","ADD","DELETE","ROUTE","ANOTHER","","","","","","","","","","",""};
 
 MenusOLED menuHome("HOME", display,homeBMP);
@@ -62,6 +60,21 @@ MenusOLED menuArr[] = {
   menuENV,
   //menuEFF
 };
+
+MenusOLED oscZero("ZERO",display,NULL);
+MenusOLED oscOne("ONE",display,NULL);
+MenusOLED oscTwo("TWO",display,NULL);
+MenusOLED oscThree("THREE",display,NULL);
+MenusOLED oscFour("FOUR",display,NULL);
+MenusOLED oscArr[] = {
+  oscZero,
+  oscOne,
+  oscTwo,
+  oscThree,
+  oscFour
+};
+
+//MenusOLED* activeMenu = &menuHome;
 
 unsigned char menuIndex = 0;
 unsigned char optionIndex = 0;
@@ -107,11 +120,16 @@ void navHandler(){
         menuArr[menuIndex].show(SSD1306_WHITE);
         break;
       case NAV_TEXT:
-        if(optionIndex==0 && dir==-1){optionIndex = 0;}
-        else if(optionIndex==NUM_OPTIONS-1 && dir==1){optionIndex = NUM_OPTIONS-1;}
-        else{optionIndex+=dir;}        
+        if(optionIndex==0 && dir==-1){optionIndex = 0;} // Don't go below 0
+        else if(optionIndex==NUM_OPTIONS-1 && dir==1){optionIndex = NUM_OPTIONS-1;} // Don't go above NUM_OPTIONS
+        else{
+          if(menuArr[menuIndex].testText(optionIndex+dir)){
+            optionIndex+=dir;
+          }          
+        }
+
         menuArr[menuIndex].highlight(optionIndex);
-        Serial.println(optionIndex);
+        //Serial.println(optionIndex);
         break;
       default:
         break;
@@ -170,6 +188,8 @@ void keyButtonHandler(elapsedMillis kTick){
           menuArr[menuIndex].activate();
           menuArr[menuIndex].highlight(optionIndex);
           break;
+        case NAV_GRAPH:
+          oscArr[optionIndex].deactivate();
         default:
           break;
         }
@@ -179,7 +199,7 @@ void keyButtonHandler(elapsedMillis kTick){
 
 void setup() {
   Serial.begin(9600);
-  while(!Serial);
+  //while(!Serial);
   Wire.begin();
 
   //setup PCAs    
@@ -203,10 +223,12 @@ void setup() {
   display.cp437(true);         // Use full 256 char 'Code Page 437' font
   display.setTextSize(1);  
   display.setTextColor(SSD1306_WHITE,SSD1306_BLACK);
+  display.setCursor(40, 20);
+  display.println("OSC Menu Test");
   display.setCursor(40, 28);
-  display.println("fw v0.1");
+  display.println("fw v0.0.1");
   display.setCursor(40,36);
-  display.println("03.01.25");
+  display.println("03.23.25");
   display.drawBitmap(0,18,qrCode,35,35,SSD1306_WHITE);
   display.drawBitmap(0,0,teensynthlogo,128,16,SSD1306_WHITE);
   display.display();
@@ -214,6 +236,8 @@ void setup() {
   
   display.clearDisplay();
   menuIndex = 0;
+  //activeMenu->show(SSD1306_WHITE);
+  //activeMenu->highlight(0);
   menuArr[menuIndex].show(SSD1306_WHITE);
   menuArr[menuIndex].highlight(0);
   //menuOSC.show();
@@ -223,7 +247,6 @@ void setup() {
   utick = micros();
   Serial.println("Setup complete!");
 }
-
 
 void loop(){
     

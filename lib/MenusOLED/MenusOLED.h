@@ -2,7 +2,7 @@
 //#include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <typeinfo>
+//#include <typeinfo>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -12,13 +12,15 @@
 
 #define NUM_OPTIONS 16 // Number of options allowed in a text menu by default
 
-#define MODE_TEXT 0x54 // Ascii 'T'
-#define MODE_GRAPHIC 0x47 // Ascii 'G'
-#define MODE_OTHER 0x4F // Ascii 'O'
+#define MODE_DEFAULT 0 // Ascii 'O'
+#define MODE_TEXT 1 // Ascii 'T'
+#define MODE_GRAPHIC 2 // Ascii 'G'
 
+/*
 #define NAV_DEFAULT 0 // Horizontal scrolling
 #define NAV_TEXT 1 // Vertical scrolling for text menus
 #define NAV_GRAPH 2 // TBD for graphic menus
+*/
 
 // ================================================================================================
 // 8x16 pixel sprites
@@ -99,8 +101,92 @@ const unsigned char fltBMP[] PROGMEM = {
 };
 const unsigned char effectsBMP[] PROGMEM = {};
 
-const String menuNames[8] = {
-    "MAIN", "OSCILLATOR", "NOISE", "MIXER", "FILTER", "AMPLIFIER", "SAMPLE & HOLD", "EFFECTS"
+// ================================================================================================
+// 24x16 pixel sprites
+// ================================================================================================
+#define MSPRITE_WIDTH 24
+#define MSPRITE_HEIGHT 16
+
+const unsigned char sawtoothBMP[] PROGMEM = {
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000,    
+    0b00000100,0b00000000,0b01000000,
+    0b00001100,0b00000000,0b11000000,
+    0b00010100,0b00000001,0b01000000,
+    0b00100100,0b00000010,0b01000000,    
+    0b01000100,0b00000100,0b01000000,
+    0b10000100,0b00001000,0b01000000,
+    0b00000100,0b00010000,0b01000001,
+    0b00000100,0b00100000,0b01000010,    
+    0b00000100,0b01000000,0b01000100,
+    0b00000100,0b10000000,0b01001000,
+    0b00000101,0b00000000,0b01010000,
+    0b00000110,0b00000000,0b01100000,    
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000
+};
+
+const unsigned char squareBMP[] PROGMEM = {
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000,    
+    0b00111100,0b00011111,0b11000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,    
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,    
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000100,0b00010000,0b01000000,
+    0b00000111,0b11110000,0b01111110,    
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000
+};
+const unsigned char sineBMP[] PROGMEM = {
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000,    
+    0b00000100,0b00000000,0b01000000,
+    0b00001010,0b00000000,0b10100000,
+    0b00010001,0b00000001,0b00010000,
+    0b00010001,0b00000001,0b00010000,    
+    0b00100000,0b10000010,0b00001000,
+    0b00100000,0b10000010,0b00001000,
+    0b00100000,0b10000010,0b00001000,
+    0b00100000,0b10000010,0b00001000,    
+    0b01000000,0b01000100,0b00000100,
+    0b01000000,0b01000100,0b00000100,
+    0b00000000,0b00101000,0b00000100,
+    0b00000000,0b00010000,0b00000010,    
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000
+};
+
+const unsigned char triangleBMP[] PROGMEM = {
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000,    
+    0b00000010,0b00000000,0b10000000,
+    0b00000010,0b00000000,0b10000000,
+    0b00000101,0b00000001,0b01000000,
+    0b00000101,0b00000001,0b01000000,    
+    0b00001000,0b10000010,0b00100000,
+    0b00001000,0b10000010,0b00100000,
+    0b00010000,0b01000100,0b00010000,
+    0b00010000,0b01000100,0b00010000,    
+    0b10100000,0b00101000,0b00001000,
+    0b10100000,0b00101000,0b00001000,
+    0b01000000,0b00010000,0b00000100,
+    0b01000000,0b00010000,0b00000100,    
+    0b00000000,0b00000000,0b00000000,
+    0b00000000,0b00000000,0b00000000
+};
+
+const unsigned char* waveArr[4] = {
+    sawtoothBMP,
+    squareBMP,
+    sineBMP,
+    triangleBMP
 };
 
 // Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 8320)
@@ -167,39 +253,52 @@ const unsigned char teensynthlogo [] PROGMEM = {
 class MenusOLED{
     protected:    
         String menuName;
-        String* optionList;        
-        Adafruit_SSD1306& display;        
+        String* optionList;
+        
+        Adafruit_SSD1306& display;
         //unsigned char spriteIndex;
         //unsigned char w;
         //unsigned char h;
-        uint8_t mode;
+        int mode;
         int8_t textOffset;
         const unsigned char* menuLogo;
+        MenusOLED* children;
         MenusOLED* parent;
-        MenusOLED* child;
-        
+        MenusOLED* leftSibling;
+        MenusOLED* rightSibling;
         bool isActive;
     public:
         MenusOLED(
             String name, 
             Adafruit_SSD1306& displayy, 
             const unsigned char* logo
-        );
+        );        
         MenusOLED(
-            uint8_t modee,
+            int modee,
             String name, 
             Adafruit_SSD1306& displayy, 
             const unsigned char* logo,
-            String* options
+            String* options,
+            MenusOLED* kiddos
         );
         virtual void show(bool color);        
         virtual void showText();
         void showGraphic();
         void setParent(MenusOLED* par);
-        void setChild(MenusOLED* chile);
+        void setNeighbors(MenusOLED* left, MenusOLED* right, MenusOLED* par);
+        
+        MenusOLED* getParent();
+        MenusOLED* getLeft();
+        MenusOLED* getRight();
+        MenusOLED* getChild(uint8_t index);
+        //void setChild(MenusOLED* chile);
         void activate();
         void deactivate();
         void highlight(int8_t i);
+        bool getActive();
+        String getName();
+        uint8_t getMode();
+        bool testText(uint8_t i);
         ~MenusOLED();
 };
 
