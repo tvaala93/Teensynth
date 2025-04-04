@@ -43,8 +43,8 @@ extern Adafruit_SSD1306 display;
 // Setup Menu screens
 // ================================================================================================
 
-extern String oscOptions[];
-extern String envOptions[];
+//extern std::vector<String> oscOptions;
+//extern std::vector<String> envOptions;
 
 extern MenusOLED oscConfig;
 extern MenusOLED oscAdd;
@@ -72,9 +72,22 @@ extern MenusOLED menuFLT;
 extern MenusOLED menuENV;
 extern MenusOLED menuEFF;
 //MenusOLED modMatrix("MOD MATRIX",display,gridBMP);
+extern MenusOLED menuRoot;
 
 // End setup menu screens -------------------------------------------------------------------------
 
+
+// ================================================================================================
+// Icons
+// ================================================================================================
+
+extern std::vector<Icon> waveIcons;
+
+// End icons -----------------------------------------------------------------------------------
+
+// ================================================================================================
+// Helper Functions
+// ================================================================================================
 void ioSetup();
 void screenSetup();
 void startupScreen();

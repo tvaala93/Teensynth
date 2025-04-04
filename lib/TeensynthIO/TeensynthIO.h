@@ -36,6 +36,10 @@
 #define UPDATE_MICROS 400
 #define DEBOUNCE_DELAY 200 // ms
 
+constexpr uint16_t ENCODER_INTERVAL = 5; // ms
+constexpr uint16_t ENCODER_DEBOUNCE = 50; // ms
+constexpr uint16_t PCA_INTERVAL = 1500; // us
+
 /*  --  LEDs  --
  *   PCA1:
  *    - LED3 @IO07
