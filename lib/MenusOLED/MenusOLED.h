@@ -182,12 +182,14 @@ const unsigned char triangleBMP[] PROGMEM = {
     0b00000000,0b00000000,0b00000000
 };
 
-const unsigned char* waveArr[4] = {
+/*
+std::vector<const unsigned char*> waveArr = {
     sawtoothBMP,
     squareBMP,
     sineBMP,
     triangleBMP
 };
+*/
 
 // Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 8320)
 /*
@@ -249,56 +251,64 @@ const unsigned char teensynthlogo [] PROGMEM = {
 
 // End other BMPs ---------------------------------------------------------------------------------
 
+struct Icon {
+    const unsigned char* bmp;
+    const char* label;
+    int x;
+    int y;
+};
 
-class MenusOLED{
+class MenusOLED {
     protected:    
-        String menuName;
-        String* optionList;
-        
-        Adafruit_SSD1306& display;
-        //unsigned char spriteIndex;
-        //unsigned char w;
-        //unsigned char h;
         int mode;
-        int8_t textOffset;
-        const unsigned char* menuLogo;
-        MenusOLED* children;
+        String menuName;
+        Adafruit_SSD1306& display;
+        const unsigned char* menuLogo; 
+        //std::vector<String> optionList;
         MenusOLED* parent;
-        MenusOLED* leftSibling;
-        MenusOLED* rightSibling;
         bool isActive;
+        int8_t textOffset;
+            
+        std::vector<MenusOLED*> children;
+        
+        // Helper functions
+        void drawArrows(bool showUp, bool showDown);        
+        void printText(int yOffset, const String& text, bool highlight);
+
     public:
-        MenusOLED(
-            String name, 
-            Adafruit_SSD1306& displayy, 
-            const unsigned char* logo
-        );        
-        MenusOLED(
-            int modee,
-            String name, 
-            Adafruit_SSD1306& displayy, 
-            const unsigned char* logo,
-            String* options,
-            MenusOLED* kiddos
-        );
+        MenusOLED(int modee, String name, Adafruit_SSD1306& displayy, const unsigned char* logo)
+        : mode(modee), menuName(name), display(displayy), menuLogo(logo), parent(nullptr), isActive(false), textOffset(0) {}
+
+        
+        //MenusOLED(int modee, String name, Adafruit_SSD1306& displayy, const unsigned char* logo)//, 
+            //std::vector<String> options)
+        //: menuName(name), display(displayy), menuLogo(logo), /*optionList(options),*/ parent(nullptr), isActive(false), textOffset(0), mode(modee) {}
+        
+        // Display Functions            
         virtual void show(bool color);        
         virtual void showText();
         void showGraphic();
-        void setParent(MenusOLED* par);
-        void setNeighbors(MenusOLED* left, MenusOLED* right, MenusOLED* par);
-        
+        void highlight(int8_t i);
+
+        // Tree Functions
+        void addChild(MenusOLED* child);
         MenusOLED* getParent();
+        MenusOLED* getChild(uint8_t index);
+        size_t getChildCount();
         MenusOLED* getLeft();
         MenusOLED* getRight();
-        MenusOLED* getChild(uint8_t index);
-        //void setChild(MenusOLED* chile);
+        
+        // Activation Functions
         void activate();
-        void deactivate();
-        void highlight(int8_t i);
+        void deactivate();        
         bool getActive();
+
+        // Utility Functions
         String getName();
         uint8_t getMode();
-        bool testText(uint8_t i);
+        //bool testText(uint8_t i);
+        MenusOLED* findMenuByName(const String& name);
+
         ~MenusOLED();
 };
 
@@ -323,3 +333,9 @@ class GraphicMenu: public MenusOLED{
     public:
 };
 */
+
+// ================================================================================================
+// Helper Functions 
+// ================================================================================================
+
+void drawIcon(Icon icon, Adafruit_SSD1306& display);
