@@ -4,19 +4,17 @@
 //#include <MenusOLED.h>
 
 //#include <Audio.h>
-#include <Wire.h>
+//#include <Wire.h>
 //#include <SPI.h>
 //#include <SD.h>
 //#include <SerialFlash.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
 
 #include <synth_setup.h>
 
-MenusOLED* currentMenu = &menuHome;
+//MenusOLED* currentMenu = &menuHome;
 //MenusOLED* lastMenu = &menuHome;
-
-unsigned char optionIndex = 0;
 
 elapsedMillis tick;
 elapsedMicros utick;
@@ -32,8 +30,8 @@ Encoder* encoders[] = {&blkEnc, &bluEnc, &grnEnc, &ylwEnc, &ongEnc};
 elapsedMillis encoderTimers[] = {0, 1, 2, 3, 4};
 
 
-int8_t encoderDirection;
-uint8_t navigationMode = MODE_DEFAULT;
+int8_t direction = 0;
+//uint8_t navigationMode = MODE_DEFAULT;
 
 // Every 1500 microseconds, read each PCA
 void handlePCAReads(){
@@ -51,127 +49,77 @@ void handlePCAReads(){
   }
 }
 
-void handleTextNavigation(){
-  if(optionIndex==0 && encoderDirection==-1){return;} // Don't go below 0
-  else if(optionIndex==currentMenu->getChildCount()-1 && encoderDirection==1){return;} // Don't go above NUM_OPTIONS
-  optionIndex+=encoderDirection;
-  currentMenu->highlight(optionIndex);  
-}
-
-// Need to tell navEnc what to do based on current navigationMode
-void handleNavigation(){
-  encoderDirection= blkEnc.getDir();
-  if(encoderDirection!= 0){    
-    Serial.print("dir: ");
-    Serial.println(encoderDirection);
-    Serial.print("navigationMode: ");
-    Serial.println(navigationMode);
-    Serial.print("currentMenu: ");
-    Serial.println(currentMenu->getName());
-    Serial.println();
-
-    // If menu is not active, navigate left/right
-    if(!currentMenu->getActive() || navigationMode == MODE_DEFAULT){
-      // If menu is not active, navigate left/right
-      if(encoderDirection==1 && currentMenu->getRight() != nullptr){
-        currentMenu = currentMenu->getRight();
-        //lastMenu = currentMenu;
-      }
-      else if(encoderDirection==-1 && currentMenu->getLeft() != nullptr){
-        currentMenu = currentMenu->getLeft();
-        //lastMenu = currentMenu;
-      } 
-      currentMenu->show(SSD1306_WHITE);
-    }
-    // If menu is active, navigate based on screen type
-    else{
-      // If menu is active, navigate based on screen type
-      switch(navigationMode){      
-        case MODE_TEXT:
-          handleTextNavigation();
-          break;
-        case MODE_GRAPHIC:
-          //handleGraphicNavigation();
-          break;
-        default:
-          break;
-      }
-    }
-  }
-}
-
 void handleForwardButton(){
-  if(!currentMenu->getActive()){
-    currentMenu->activate();
-    navigationMode = currentMenu->getMode(); // If a text menu, navigate in text mode; same for graphic            
-    optionIndex = 0;
-    currentMenu->highlight(optionIndex);
-  }
-  // If in text mode, switch to the highlighted menu
-  else if(currentMenu->getMode()==MODE_TEXT){
-    if(currentMenu->getChild(optionIndex) != nullptr){
-      //lastMenu = currentMenu;            
-      currentMenu = currentMenu->getChild(optionIndex);            
-      currentMenu->deactivate();            
-      navigationMode = currentMenu->getMode();      
-    }
-  }
-  else{
-      Serial.println("UNHANDLED LOGIC: navButton press");
-  }
+  dispMgr.navigateForward();
 }
 
 void handleBackButton(){
-  // If current menu is not active, 
-  if(!currentMenu->getActive()){          
-    //if(currentMenu->getParent() != nullptr){            
-      currentMenu = currentMenu->getParent();
-      if (currentMenu->getName() == "ROOT"){
-        currentMenu = &menuHome;
-      }
-      else{
-        currentMenu->show(SSD1306_WHITE);
-      }
-    //}
-    /*
-    else{
-      currentMenu = lastMenu;
-    }
-    */
-    currentMenu->activate();
-    navigationMode = currentMenu->getMode(); // update navigationMode
-    if(navigationMode == MODE_TEXT){
-      currentMenu->highlight(optionIndex);
-    }          
-  }        
-  else{
-      currentMenu->deactivate();
-      navigationMode = MODE_DEFAULT;            
+  dispMgr.navigateBackward();
+}
+
+void handleBlu(int encDir){
+  // Handle blue encoder  
+  if(encDir != 0 ){
+    // Handle blue encoder in graphic mode{
+    Serial.print("Blue Encoder direction: ");
+    Serial.println(encDir);
+
+    //dispMgr.drawIcon(currentMenu->getIcon(encDir));    
+  }
+}
+void handleGrn(int encDir){
+  // Handle green encoder  
+  if(encDir != 0) {
+    Serial.print("Green Encoder direction: ");
+    Serial.println(encDir);
+  }
+}
+void handleYlw(int encDir){
+  // Handle yellow encoder  
+  if(encDir != 0) {
+    Serial.print("Yellow Encoder direction: ");
+    Serial.println(encDir);
+  }
+}
+void handleOng(int encDir){
+  // Handle orange encoder  
+  if(encDir != 0) {
+    Serial.print("Orange Encoder direction: ");
+    Serial.println(encDir);
   }
 }
 
 // Every 5 milliseconds, update each Encoder
 void handleEncoderUpdates(){
-  for (size_t i = 0; i < sizeof(encoders) / sizeof(encoders[0]); ++i) {
+  for (size_t i = 0; i < 5; ++i) {
     if (encoderTimers[i] % ENCODER_INTERVAL == 0) {
-        encoders[i]->getPosn();
-        if (i == 0) { // blkEnc is the navigation encoder
-            handleNavigation();
+      encoders[i]->getPosn();
+      direction = encoders[i]->getDir();
+      if(direction != 0) {
+        switch (i) {
+            case 0: dispMgr.handleNavigation(direction); break;
+            case 1: handleBlu(direction);break;
+            case 2: handleGrn(direction);break;
+            case 3: handleYlw(direction);break;
+            case 4: handleOng(direction);break;
+            default: break;
         }
-        encoderTimers[i] = 0;
+      // Reset the timer for this encoder
+      encoderTimers[i] = 0;
+      }
     }
-}
+  }
 }
 
 void handleButtonPresses(elapsedMillis buttonTick){
   if(buttonTick >= ENCODER_DEBOUNCE){    
     if(blkEnc.getButton()){          
         handleForwardButton();   
-        Serial.println("Forward button pressed");     
+        //Serial.println("Forward button pressed");     
     }
     else if(ongEnc.getButton()){
         handleBackButton();
-        Serial.println("Back button pressed");
+        //Serial.println("Back button pressed");
     }
   }
 }
@@ -185,27 +133,30 @@ void setup() {
   screenSetup();
   startupScreen();
   
-  display.clearDisplay(); 
-  for (size_t i = 0; i < waveIcons.size(); ++i) {
-    drawIcon(waveIcons[i], display);
-  }
-  delay(2000);
-
   display.clearDisplay();  
-  currentMenu->show(SSD1306_WHITE);
-  currentMenu->highlight(0);
-  //menuOSC.show();
-  //menuOSC.showText();
-  //display.clearDisplay();
+  dispMgr.show(SSD1306_WHITE);
+
   tick = millis();
   utick = micros();
   Serial.println("Setup complete!");
+  
 }
 
-void loop(){ 
+void loop(){
+  //start = micros(); 
   handlePCAReads();
   handleEncoderUpdates();
   handleButtonPresses(tick);
   
-  tick = millis();  
+  tick = millis();
+  
+  /*
+  finish = micros();
+  if (finish - start > 5000) {
+    Serial.print("Loop time: ");
+    Serial.print(finish - start);
+    Serial.println(" micros");
+  }
+  */
+
 }

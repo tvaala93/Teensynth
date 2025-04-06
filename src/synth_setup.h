@@ -1,7 +1,8 @@
 //#include <Arduino.h>
 #include <NotesVolts.h>
 #include <TeensynthIO.h>
-#include <MenusOLED.h>
+//#include <MenusOLED.h>
+#include <DisplayManager.h>
 
 //#include <Audio.h>
 //#include <Wire.h>
@@ -12,8 +13,8 @@
 //#include <Adafruit_SSD1306.h>
 
 #define APP_NAME "Teensynth"
-#define APP_VERSION "0.0.2"
-#define APP_DATE "2025-03-30"
+#define APP_VERSION "0.0.3"
+#define APP_DATE "2025-04-06"
 #define APP_AUTHOR "Ted Vaala"
 
 // ================================================================================================
@@ -45,6 +46,8 @@ extern Adafruit_SSD1306 display;
 
 //extern std::vector<String> oscOptions;
 //extern std::vector<String> envOptions;
+
+extern DisplayManager dispMgr;
 
 extern MenusOLED oscConfig;
 extern MenusOLED oscAdd;

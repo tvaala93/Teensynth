@@ -33,56 +33,65 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //TODO test dynamic menu creation and deletion
 //TODO test home menu modes: when in perform mode, have hotkeys for each menuscreen active
 
-MenusOLED menuRoot(MODE_DEFAULT,"ROOT",display,NULL);
-
-MenusOLED menuHome(MODE_TEXT,"Home", display,homeBMP);
-    MenusOLED homeConfig(MODE_TEXT,"Configure Mode", display,homeBMP);
-    MenusOLED homePerform(MODE_TEXT,"Perform Mode", display,homeBMP);
-    MenusOLED homeRecord(MODE_TEXT,"Record Mode", display,homeBMP);
-MenusOLED menuKeys(MODE_DEFAULT,"Keys", display,keysBMP);
-MenusOLED menuOSC(MODE_TEXT,"Oscillators",display,oscBMP);
-    MenusOLED oscAdd(MODE_TEXT,"Add",display,oscBMP);
-        MenusOLED oscAdd0(MODE_DEFAULT,"Voice 0",display,oscBMP);
-        MenusOLED oscAdd1(MODE_DEFAULT,"Voice 1",display,oscBMP);
-        MenusOLED oscAdd2(MODE_DEFAULT,"Voice 2",display,oscBMP);
-        MenusOLED oscAdd3(MODE_DEFAULT,"Voice 3",display,oscBMP);
-        MenusOLED oscAddLFO(MODE_DEFAULT,"LFOs",display,oscBMP);
-    MenusOLED oscConfig(MODE_DEFAULT,"Configure",display,oscBMP);
-    MenusOLED oscRoute(MODE_DEFAULT,"Route",display,oscBMP);
-    MenusOLED oscDelete(MODE_DEFAULT,"Delete",display,oscBMP);
-MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", display,noiseSHBMP);
-MenusOLED menuMIX(MODE_TEXT,"Mixer", display,mixBMP);
-    MenusOLED mixMain(MODE_DEFAULT,"Main", display,mixBMP);
-    MenusOLED mix0(MODE_DEFAULT,"Voice 0", display,mixBMP);
-    MenusOLED mix1(MODE_DEFAULT,"Voice 1", display,mixBMP);
-    MenusOLED mix2(MODE_DEFAULT,"Voice 2", display,mixBMP);
-    MenusOLED mix3(MODE_DEFAULT,"Voice 3", display,mixBMP);
-MenusOLED menuFLT(MODE_DEFAULT,"Filter", display,fltBMP);
-MenusOLED menuENV(MODE_TEXT,"Envelopes", display,envBMP);
-    MenusOLED envConfig(MODE_DEFAULT,"Configure",display,envBMP);
-    MenusOLED envAdd(MODE_DEFAULT,"Add",display,envBMP);
-    MenusOLED envRoute(MODE_DEFAULT,"Route",display,envBMP);
-    MenusOLED envDelete(MODE_DEFAULT,"Delete",display,envBMP);
-MenusOLED menuEFF(MODE_TEXT,"Effects", display,keysBMP);
-    MenusOLED effFade(MODE_DEFAULT,"Fade",display,keysBMP);
-    MenusOLED effDelay(MODE_DEFAULT,"Delay",display,keysBMP);
-    MenusOLED effReverb(MODE_DEFAULT,"Reverb",display,keysBMP);
-    MenusOLED effChorus(MODE_DEFAULT,"Chrous",display,keysBMP);
-    MenusOLED effFlanger(MODE_DEFAULT,"Flanger",display,keysBMP);
-    MenusOLED effDist(MODE_DEFAULT,"Distortion",display,keysBMP);
-    MenusOLED effBitCrush(MODE_DEFAULT,"Bit Crusher",display,keysBMP);
-    MenusOLED effChop(MODE_DEFAULT,"Chop",display,keysBMP);
-    MenusOLED effRingMod(MODE_DEFAULT,"Ring Mod",display,keysBMP);
-    MenusOLED effWah(MODE_DEFAULT,"Wah",display,keysBMP);
-    MenusOLED effPhaser(MODE_DEFAULT,"Phaser",display,keysBMP);
-//MenusOLED modMatrix("MOD MATRIX",display,gridBMP);
+std::vector<Icon> testIcons = {
+    {sawtoothBMP, "Wave", 16, 32},
+    {squareBMP, "Octv", 48, 32},
+    {triangleBMP, "Tune", 80, 32},
+    {sineBMP, "Gain", 112, 32}
+};
 
 std::vector<Icon> waveIcons = {
-    {sawtoothBMP, "WAVE", 16, 32},
-    {squareBMP, "OCTV", 48, 32},
-    {triangleBMP, "TUNE", 80, 32},
-    {sineBMP, "GAIN", 112, 32}
+    {sawtoothBMP, "Wave", 16, 32},
+    {squareBMP, "Octv", 16, 32},
+    {triangleBMP, "Tune", 16, 32},
+    {sineBMP, "Gain", 16, 32}
 };
+
+MenusOLED menuRoot(MODE_DEFAULT,"ROOT",NULL);
+
+MenusOLED menuHome(MODE_TEXT,"Home", homeBMP);
+    MenusOLED homeConfig(MODE_TEXT,"Configure Mode", homeBMP);
+    MenusOLED homePerform(MODE_TEXT,"Perform Mode", homeBMP);
+    MenusOLED homeRecord(MODE_TEXT,"Record Mode", homeBMP);
+MenusOLED menuKeys(MODE_DEFAULT,"Keys", keysBMP);
+MenusOLED menuOSC(MODE_TEXT,"Oscillators",oscBMP);
+    MenusOLED oscAdd(MODE_TEXT,"Add",oscBMP);
+        MenusOLED oscAdd0(MODE_DEFAULT,"Voice 0",oscBMP);
+        MenusOLED oscAdd1(MODE_DEFAULT,"Voice 1",oscBMP);
+        MenusOLED oscAdd2(MODE_DEFAULT,"Voice 2",oscBMP);
+        MenusOLED oscAdd3(MODE_DEFAULT,"Voice 3",oscBMP);
+        MenusOLED oscAddLFO(MODE_DEFAULT,"LFOs",oscBMP);
+    MenusOLED oscConfig(MODE_GRAPHIC,"Configure",oscBMP);          
+    MenusOLED oscRoute(MODE_DEFAULT,"Route",oscBMP);
+    MenusOLED oscDelete(MODE_DEFAULT,"Delete",oscBMP);
+MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", noiseSHBMP);
+MenusOLED menuMIX(MODE_TEXT,"Mixer", mixBMP);
+    MenusOLED mixMain(MODE_DEFAULT,"Main", mixBMP);
+    MenusOLED mix0(MODE_DEFAULT,"Voice 0", mixBMP);
+    MenusOLED mix1(MODE_DEFAULT,"Voice 1", mixBMP);
+    MenusOLED mix2(MODE_DEFAULT,"Voice 2", mixBMP);
+    MenusOLED mix3(MODE_DEFAULT,"Voice 3", mixBMP);
+MenusOLED menuFLT(MODE_DEFAULT,"Filter", fltBMP);
+MenusOLED menuENV(MODE_TEXT,"Envelopes", envBMP);
+    MenusOLED envConfig(MODE_DEFAULT,"Configure",envBMP);
+    MenusOLED envAdd(MODE_DEFAULT,"Add",envBMP);
+    MenusOLED envRoute(MODE_DEFAULT,"Route",envBMP);
+    MenusOLED envDelete(MODE_DEFAULT,"Delete",envBMP);
+MenusOLED menuEFF(MODE_TEXT,"Effects", keysBMP);
+    MenusOLED effFade(MODE_DEFAULT,"Fade",keysBMP);
+    MenusOLED effDelay(MODE_DEFAULT,"Delay",keysBMP);
+    MenusOLED effReverb(MODE_DEFAULT,"Reverb",keysBMP);
+    MenusOLED effChorus(MODE_DEFAULT,"Chrous",keysBMP);
+    MenusOLED effFlanger(MODE_DEFAULT,"Flanger",keysBMP);
+    MenusOLED effDist(MODE_DEFAULT,"Distortion",keysBMP);
+    MenusOLED effBitCrush(MODE_DEFAULT,"Bit Crusher",keysBMP);
+    MenusOLED effChop(MODE_DEFAULT,"Chop",keysBMP);
+    MenusOLED effRingMod(MODE_DEFAULT,"Ring Mod",keysBMP);
+    MenusOLED effWah(MODE_DEFAULT,"Wah",keysBMP);
+    MenusOLED effPhaser(MODE_DEFAULT,"Phaser",keysBMP);
+//MenusOLED modMatrix("MOD MATRIX",display,gridBMP);
+
+DisplayManager dispMgr(display, &menuHome);
 
 // End setup menu screens -------------------------------------------------------------------------
 
@@ -106,7 +115,7 @@ void startupScreen(){
     display.drawBitmap(0,0,teensynthlogo,128,16,SSD1306_WHITE);
     display.display();
     
-    delay(3000);
+    delay(2000);
 }
 
 // Configures the PCA9555s and the encoders, sets up the display
@@ -139,8 +148,8 @@ void ioSetup(){
 // parent menu, or it can be a completely different menu. The child menu can also have
 // its own child menus, and so on. The idea is to have a tree structure of menus, with
 // the ability to navigate between them.
-void screenSetup(){
-    // Setup Root children
+
+void setupRootMenu(){
     menuRoot.addChild(&menuHome);
     menuRoot.addChild(&menuKeys);
     menuRoot.addChild(&menuOSC);
@@ -149,35 +158,44 @@ void screenSetup(){
     menuRoot.addChild(&menuFLT);
     menuRoot.addChild(&menuENV);
     menuRoot.addChild(&menuEFF);
+}
 
-    // Setup menuHome children
+void setupHomeMenu(){
     menuHome.addChild(&homeConfig);
     menuHome.addChild(&homePerform);
     menuHome.addChild(&homeRecord);
+}
 
-    // Setup menuOSC children
+void setupOscillatorMenu(){
     menuOSC.addChild(&oscAdd);
         oscAdd.addChild(&oscAdd0);
         oscAdd.addChild(&oscAdd1);
         oscAdd.addChild(&oscAdd2);
     menuOSC.addChild(&oscConfig);
+        oscConfig.addIcon(waveIcons[0]);
+        oscConfig.addIcon(waveIcons[1]);
+        oscConfig.addIcon(waveIcons[2]);
+        oscConfig.addIcon(waveIcons[3]);  
     menuOSC.addChild(&oscRoute);
     menuOSC.addChild(&oscDelete);
+}
 
-    // Setup menuMIX children
+void setupMixerMenu(){
     menuMIX.addChild(&mixMain);
     menuMIX.addChild(&mix0);
     menuMIX.addChild(&mix1);
     menuMIX.addChild(&mix2);
     menuMIX.addChild(&mix3);
+}
 
-    // Setup menuENV children
+void setupEnvelopeMenu(){
     menuENV.addChild(&envAdd);
     menuENV.addChild(&envConfig);
     menuENV.addChild(&envRoute);
     menuENV.addChild(&envDelete);
+}
 
-    // Setup menuEFF children
+void setupEffectsMenu(){
     menuEFF.addChild(&effFade);
     menuEFF.addChild(&effDelay);
     menuEFF.addChild(&effReverb);
@@ -189,4 +207,13 @@ void screenSetup(){
     menuEFF.addChild(&effRingMod);
     menuEFF.addChild(&effWah);
     menuEFF.addChild(&effPhaser);
+}
+
+void screenSetup(){
+    setupRootMenu();
+    setupHomeMenu();
+    setupOscillatorMenu();
+    setupMixerMenu();
+    setupEnvelopeMenu();
+    setupEffectsMenu();
 }
