@@ -1,7 +1,7 @@
-#include <Wire.h>
-//#include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Wire.h>
+#include <Arduino.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
 //#include <typeinfo>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -10,11 +10,21 @@
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3C for 128x64, 0x3D for 128x32
 
-#define NUM_OPTIONS 16 // Number of options allowed in a text menu by default
+#define MAX_VISIBLE_OPTIONS 6 // Number of options visible on the screen at once
+#define TEXT_AREA_OFFSET 17 // Offset for text area
+#define MENU_NAME_HEIGHT 8 // Height of menu name area
 
-#define MODE_DEFAULT 0 // Ascii 'O'
-#define MODE_TEXT 1 // Ascii 'T'
-#define MODE_GRAPHIC 2 // Ascii 'G'
+//#define NUM_OPTIONS 16 // Number of options allowed in a text menu by default
+
+//#define MODE_DEFAULT 0 // Ascii 'O'
+//#define MODE_TEXT 1 // Ascii 'T'
+//#define MODE_GRAPHIC 2 // Ascii 'G'
+
+enum MenuModes {
+    MODE_DEFAULT,
+    MODE_TEXT,
+    MODE_GRAPHIC
+};
 
 /*
 #define NAV_DEFAULT 0 // Horizontal scrolling
@@ -182,29 +192,6 @@ const unsigned char triangleBMP[] PROGMEM = {
     0b00000000,0b00000000,0b00000000
 };
 
-/*
-std::vector<const unsigned char*> waveArr = {
-    sawtoothBMP,
-    squareBMP,
-    sineBMP,
-    triangleBMP
-};
-*/
-
-// Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 8320)
-/*
-const unsigned char* spriteArr[8] = {
-    homeBMP,
-    keysBMP,
-    envBMP, 
-    oscBMP,
-    noiseSHBMP,
-    mixBMP,
-    fltBMP,
-    effectsBMP
-  };
-*/
-
 // End sprites ------------------------------------------------------------------------------------
 
 
@@ -262,45 +249,37 @@ class MenusOLED {
     protected:    
         int mode;
         String menuName;
-        Adafruit_SSD1306& display;
+        //Adafruit_SSD1306& display;
         const unsigned char* menuLogo; 
         //std::vector<String> optionList;
         MenusOLED* parent;
         bool isActive;
-        int8_t textOffset;
-            
+                    
         std::vector<MenusOLED*> children;
-        
-        // Helper functions
-        void drawArrows(bool showUp, bool showDown);        
-        void printText(int yOffset, const String& text, bool highlight);
-
+        std::vector<Icon> icons;
+        int8_t iconIndex;
     public:
-        MenusOLED(int modee, String name, Adafruit_SSD1306& displayy, const unsigned char* logo)
-        : mode(modee), menuName(name), display(displayy), menuLogo(logo), parent(nullptr), isActive(false), textOffset(0) {}
-
+        MenusOLED(int modee, String name, const unsigned char* logo)
+        : mode(modee), menuName(name), menuLogo(logo), parent(nullptr), isActive(false), iconIndex(0) {}
         
-        //MenusOLED(int modee, String name, Adafruit_SSD1306& displayy, const unsigned char* logo)//, 
-            //std::vector<String> options)
-        //: menuName(name), display(displayy), menuLogo(logo), /*optionList(options),*/ parent(nullptr), isActive(false), textOffset(0), mode(modee) {}
-        
-        // Display Functions            
-        virtual void show(bool color);        
-        virtual void showText();
-        void showGraphic();
-        void highlight(int8_t i);
-
         // Tree Functions
         void addChild(MenusOLED* child);
         MenusOLED* getParent();
         MenusOLED* getChild(uint8_t index);
         size_t getChildCount();
-        MenusOLED* getLeft();
-        MenusOLED* getRight();
+        //MenusOLED* getLeft();
+        //MenusOLED* getRight();
+        MenusOLED* getSibling(int dir);
+
+        // Graphic Functions
+        void addIcon(Icon icon);
+        Icon getIcon(int8_t index);
+        size_t getIconCount();
+        const unsigned char* getLogo();
         
         // Activation Functions
-        void activate();
-        void deactivate();        
+        bool activate();
+        bool deactivate();        
         bool getActive();
 
         // Utility Functions
@@ -312,30 +291,8 @@ class MenusOLED {
         ~MenusOLED();
 };
 
-/*
-class TextMenu: public MenusOLED{
-    private:
-        String* optionList;
-    public:
-        TextMenu(            
-            String name, 
-            Adafruit_SSD1306& displayy, 
-            const unsigned char* logo,
-            String* options);//: MenusOLED(name,displayy,logo){};
-        
-        void showText() override;
-        //void show(bool color) override;
-};
-
-
-class GraphicMenu: public MenusOLED{
-    private:
-    public:
-};
-*/
-
 // ================================================================================================
 // Helper Functions 
 // ================================================================================================
 
-void drawIcon(Icon icon, Adafruit_SSD1306& display);
+//void drawIcon(Icon icon, Adafruit_SSD1306& display);
