@@ -1,5 +1,5 @@
 # Teensynth Sourcecode
-Updated 3/31/2025
+Updated 4/10/2025
 
 ## Contents  
 - [TODO](#todo)
@@ -7,10 +7,12 @@ Updated 3/31/2025
 - [Modules](#modules)
 - [Error Codes](#error-codes)
 
-## TODO - Cleanup and Optimize
-- [ ] Cleanup / optimize menu system into more of a tree system
+## TODO
+- [x] Cleanup / optimize menu system into more of a tree system
 - [ ] Cleanup / optimize io library for faster access
 - [ ] Cleanup / optimize setup functions
+- [ ] Refactor DisplayManager to be more templated(?)
+- [ ] Integrate Audio components
 
 ## IO Validation -- COMPLETE
 - [X] Initial power-up from micro-USB
@@ -32,9 +34,10 @@ This module contains relevant pin definitions for the Teensynth along with class
 - Encoder
 - TLED  
 ### MenusOLED  
-This module contains relevant code for organizing the various menu screens that can be shown on the SSD1306 OLED display.  
+This module contains relevant code for organizing the various menu screens that can be shown on the SSD1306 OLED display. The MenusOLED objects are intended to store the specific data and hierarchy of the various menu screens, but these objects do not directly interact with the Adafruit_GFX library or other display code.  
+### DisplayManager
+This module contains code that directly interacts with the Adafruit_GFX library. It contains functions for drawing the menu bar along the top of the display, showing text lists, showing graphics, and other related functionality.  
 
-The current ideology is to have a core menu class with subclasses for text-only menu screens and graphic menu screens
 ### NotesVolts
-This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies
+This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies.  
 ## Error Codes
