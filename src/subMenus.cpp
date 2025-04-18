@@ -11,10 +11,7 @@
 //#include <Adafruit_GFX.h>
 //#include <Adafruit_SSD1306.h>
 
-#include <synth_setup.h>
-
-//MenusOLED* currentMenu = &menuHome;
-//MenusOLED* lastMenu = &menuHome;
+#include <synth_setup_mini.h>
 
 elapsedMillis tick;
 elapsedMicros utick;
@@ -57,38 +54,6 @@ void handleBackButton(){
   dispMgr.navigateBackward();
 }
 
-void handleBlu(int encDir){
-  // Handle blue encoder  
-  if(encDir != 0 ){
-    // Handle blue encoder in graphic mode{
-    Serial.print("Blue Encoder direction: ");
-    Serial.println(encDir);
-
-    //dispMgr.drawIcon(currentMenu->getIcon(encDir));    
-  }
-}
-void handleGrn(int encDir){
-  // Handle green encoder  
-  if(encDir != 0) {
-    Serial.print("Green Encoder direction: ");
-    Serial.println(encDir);
-  }
-}
-void handleYlw(int encDir){
-  // Handle yellow encoder  
-  if(encDir != 0) {
-    Serial.print("Yellow Encoder direction: ");
-    Serial.println(encDir);
-  }
-}
-void handleOng(int encDir){
-  // Handle orange encoder  
-  if(encDir != 0) {
-    Serial.print("Orange Encoder direction: ");
-    Serial.println(encDir);
-  }
-}
-
 // Every 5 milliseconds, update each Encoder
 void handleEncoderUpdates(){
   for (size_t i = 0; i < 5; ++i) {
@@ -96,17 +61,18 @@ void handleEncoderUpdates(){
       encoders[i]->getPosn();
       direction = encoders[i]->getDir();
       if(direction != 0) {
-        switch (i) {
-            case 0: dispMgr.handleNavigation(direction); break;
-            case 1: handleBlu(direction);break;
-            case 2: handleGrn(direction);break;
-            case 3: handleYlw(direction);break;
-            case 4: handleOng(direction);break;
-            default: break;
+        if(i==0) dispMgr.handleNavigation(direction);
+        else{
+          dispMgr.getCurrentMenu()->writeSlot(i, direction);
+          //Serial.print("Encoder ");
+          //Serial.print(i);
+          //Serial.print(" direction: ");
+          //Serial.println(direction);
         }
-      // Reset the timer for this encoder
-      encoderTimers[i] = 0;
+
       }
+      // Reset the timer for this encoder
+      encoderTimers[i] = 0;      
     }
   }
 }
@@ -133,13 +99,20 @@ void setup() {
   screenSetup();
   startupScreen();
   
+  display.clearDisplay();
+  display.drawCircle(64, 32, 12, SSD1306_WHITE);
+  for(int i=0; i<120; i++){
+    dispMgr.fillArc2(64, 32, 180, i, 12, 4, SSD1306_WHITE);
+    display.display();
+    delay(50);
+  }
+
   display.clearDisplay();  
   dispMgr.show(SSD1306_WHITE);
 
   tick = millis();
   utick = micros();
   Serial.println("Setup complete!");
-  
 }
 
 void loop(){

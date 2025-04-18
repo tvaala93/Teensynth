@@ -23,3 +23,29 @@ using namespace std;
 #define ROOT_FREQ 16.352
 
 float volt_to_freq(float volt);
+
+struct Oscillator {
+    float freq;
+    uint8_t wave;
+    uint8_t octv;
+    float tuneV;
+    float pulseWidth;
+    float gain;
+};
+struct LFO {
+    float freq;
+    uint8_t wave;
+    float tuneV;
+    float pulseWidth;
+    float gain;
+};
+struct Filter {
+    float cutoffFreq;
+    float res;
+};
+struct Envelope {
+    float attack;
+    float decay;
+    float sustain;
+    float release;
+};

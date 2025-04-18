@@ -1,8 +1,9 @@
-#include <synth_setup.h>
+#include <synth_setup_mini.h>
 
 // ================================================================================================
 // Standard hardware IO. Do not change without good reason
 // ================================================================================================
+
 PCA9555 pca0(ADDR_PCA0);
 PCA9555 pca1(ADDR_PCA1);
 PCA9555 pca2(ADDR_PCA2);
@@ -19,9 +20,60 @@ int8_t grnDir = 0;
 int8_t ylwDir = 0;
 int8_t ongDir = 0;
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
 // End standard hardware IO -----------------------------------------------------------------------
+
+
+// ================================================================================================
+// Setup Audio
+// ================================================================================================
+
+AudioOutputI2S           i2s1;
+AudioSynthWaveform       waveform0;
+AudioSynthWaveform       waveform1;
+AudioSynthWaveform       waveform2;
+AudioSynthWaveform       waveform3;
+AudioSynthWaveform       lowFreqOsc0;
+AudioSynthWaveform       lowFreqOsc1;
+AudioEffectEnvelope      envelopeAmp;
+AudioEffectEnvelope      envelopeFilter;
+AudioMixer4              mixer1;
+AudioFilterLadder        ladder1;         
+AudioConnection          patchCord1(waveform2, 0, mixer1, 1);
+AudioConnection          patchCord2(waveform3, 0, mixer1, 2);
+AudioConnection          patchCord3(waveform1, 0, mixer1, 0);
+AudioConnection          patchCord4(mixer1, 0, ladder1, 0);
+AudioConnection          patchCord5(ladder1, 0, i2s1, 0);
+AudioConnection          patchCord6(ladder1, 0, i2s1, 1);
+AudioControlSGTL5000     sgtl5000_1;     
+
+/*
+int asdf = WAVEFORM_SINE;
+asdf = WAVEFORM_SAWTOOTH;
+asdf = WAVEFORM_SQUARE;
+asdf = WAVEFORM_TRIANGLE;
+asdf = WAVEFORM_ARBITRARY;
+asdf = WAVEFORM_PULSE;
+asdf = WAVEFORM_SAWTOOTH_REVERSE;
+asdf = WAVEFORM_SAMPLE_HOLD;
+asdf = WAVEFORM_TRIANGLE_VARIABLE;
+*/
+
+// Oscillator params
+Oscillator osc0Params = {440.0, WAVEFORM_SINE, 3, 0.0, 0.5, 0.5};
+Oscillator osc1Params = {440.0, WAVEFORM_SINE, 3, 0.0, 0.5, 0.5};
+Oscillator osc2Params = {440.0, WAVEFORM_SINE, 3, 0.0, 0.5, 0.5};
+Oscillator osc3Params = {440.0, WAVEFORM_SINE, 3, 0.0, 0.5, 0.5};
+// LFO params
+LFO lfo0Params = {1.0, WAVEFORM_SINE, 1.0, 0.5, 0.5};
+LFO lfo1Params = {1.0, WAVEFORM_SINE, 1.0, 0.5, 0.5};
+// Filter params
+Filter filterParams = {1000.0, 0.5};
+// Envelope params
+Envelope envAmpParams = {0.1, 0.1, 0.5, 0.1};
+Envelope envFltParams = {0.1, 0.1, 0.5, 0.1};
+
+// End setup audio --------------------------------------------------------------------------------
+
 
 // ================================================================================================
 // Setup Menu screens
@@ -34,17 +86,17 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //TODO test home menu modes: when in perform mode, have hotkeys for each menuscreen active
 
 std::vector<Icon> testIcons = {
-    {sawtoothBMP, "Wave", 16, 32},
-    {squareBMP, "Octv", 48, 32},
-    {triangleBMP, "Tune", 80, 32},
-    {sineBMP, "Gain", 112, 32}
+    {sawtoothBMP, "Wave",nullptr},
+    {squareBMP, "Octv",nullptr},
+    {triangleBMP, "Tune",nullptr},
+    {sineBMP, "Gain",nullptr}
 };
 
 std::vector<Icon> waveIcons = {
-    {sawtoothBMP, "Wave", 16, 32},
-    {squareBMP, "Octv", 16, 32},
-    {triangleBMP, "Tune", 16, 32},
-    {sineBMP, "Gain", 16, 32}
+    {sawtoothBMP, "Wave",nullptr},
+    {squareBMP, "Octv",nullptr},
+    {triangleBMP, "Tune",nullptr},
+    {sineBMP, "Gain",nullptr}
 };
 
 MenusOLED menuRoot(MODE_DEFAULT,"ROOT",NULL);
@@ -55,28 +107,29 @@ MenusOLED menuHome(MODE_TEXT,"Home", homeBMP);
     MenusOLED homeRecord(MODE_TEXT,"Record Mode", homeBMP);
 MenusOLED menuKeys(MODE_DEFAULT,"Keys", keysBMP);
 MenusOLED menuOSC(MODE_TEXT,"Oscillators",oscBMP);
+    MenusOLED osc0(MODE_ICON,"OSC 0",oscBMP);
+    MenusOLED osc1(MODE_ICON,"OSC 1",oscBMP);
+    MenusOLED osc2(MODE_ICON,"OSC 2",oscBMP);
+    MenusOLED osc3(MODE_ICON,"OSC 3",oscBMP);
+    MenusOLED lfo0(MODE_ICON,"LFO",oscBMP);
+    /*
     MenusOLED oscAdd(MODE_TEXT,"Add",oscBMP);
         MenusOLED oscAdd0(MODE_DEFAULT,"Voice 0",oscBMP);
         MenusOLED oscAdd1(MODE_DEFAULT,"Voice 1",oscBMP);
         MenusOLED oscAdd2(MODE_DEFAULT,"Voice 2",oscBMP);
         MenusOLED oscAdd3(MODE_DEFAULT,"Voice 3",oscBMP);
         MenusOLED oscAddLFO(MODE_DEFAULT,"LFOs",oscBMP);
-    MenusOLED oscConfig(MODE_GRAPHIC,"Configure",oscBMP);          
+    MenusOLED oscConfig(MODE_ICON,"Configure",oscBMP);          
     MenusOLED oscRoute(MODE_DEFAULT,"Route",oscBMP);
     MenusOLED oscDelete(MODE_DEFAULT,"Delete",oscBMP);
+    */
 MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", noiseSHBMP);
-MenusOLED menuMIX(MODE_TEXT,"Mixer", mixBMP);
-    MenusOLED mixMain(MODE_DEFAULT,"Main", mixBMP);
-    MenusOLED mix0(MODE_DEFAULT,"Voice 0", mixBMP);
-    MenusOLED mix1(MODE_DEFAULT,"Voice 1", mixBMP);
-    MenusOLED mix2(MODE_DEFAULT,"Voice 2", mixBMP);
-    MenusOLED mix3(MODE_DEFAULT,"Voice 3", mixBMP);
+MenusOLED menuMIX(MODE_ICON,"Mixer", mixBMP);    
 MenusOLED menuFLT(MODE_DEFAULT,"Filter", fltBMP);
 MenusOLED menuENV(MODE_TEXT,"Envelopes", envBMP);
-    MenusOLED envConfig(MODE_DEFAULT,"Configure",envBMP);
-    MenusOLED envAdd(MODE_DEFAULT,"Add",envBMP);
-    MenusOLED envRoute(MODE_DEFAULT,"Route",envBMP);
-    MenusOLED envDelete(MODE_DEFAULT,"Delete",envBMP);
+    MenusOLED envFilter(MODE_ICON,"ENV for FLT",envBMP);
+    MenusOLED envAmp(MODE_ICON,"ENV for VCA",envBMP);
+    MenusOLED envLFO(MODE_ICON,"ENV for LFO",envBMP);    
 MenusOLED menuEFF(MODE_TEXT,"Effects", keysBMP);
     MenusOLED effFade(MODE_DEFAULT,"Fade",keysBMP);
     MenusOLED effDelay(MODE_DEFAULT,"Delay",keysBMP);
@@ -91,9 +144,11 @@ MenusOLED menuEFF(MODE_TEXT,"Effects", keysBMP);
     MenusOLED effPhaser(MODE_DEFAULT,"Phaser",keysBMP);
 //MenusOLED modMatrix("MOD MATRIX",display,gridBMP);
 
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DisplayManager dispMgr(display, &menuHome);
 
 // End setup menu screens -------------------------------------------------------------------------
+
 
 // Show the Teensynth logo and QR code for 3 seconds on startup
 void startupScreen(){
@@ -167,32 +222,32 @@ void setupHomeMenu(){
 }
 
 void setupOscillatorMenu(){
-    menuOSC.addChild(&oscAdd);
-        oscAdd.addChild(&oscAdd0);
-        oscAdd.addChild(&oscAdd1);
-        oscAdd.addChild(&oscAdd2);
-    menuOSC.addChild(&oscConfig);
-        oscConfig.addIcon(waveIcons[0]);
-        oscConfig.addIcon(waveIcons[1]);
-        oscConfig.addIcon(waveIcons[2]);
-        oscConfig.addIcon(waveIcons[3]);  
-    menuOSC.addChild(&oscRoute);
-    menuOSC.addChild(&oscDelete);
+    menuOSC.addChild(&osc0);
+    menuOSC.addChild(&osc1);
+        osc1.addIcon(0,waveIcons[0]);
+        osc1.addIcon(0,waveIcons[1]);
+        osc1.addIcon(0,waveIcons[2]);
+        osc1.addIcon(0,waveIcons[3]);  
+    menuOSC.addChild(&osc2);
+    menuOSC.addChild(&osc3);
+    menuOSC.addChild(&lfo0);    
 }
 
 void setupMixerMenu(){
+    return;
+    /*
     menuMIX.addChild(&mixMain);
     menuMIX.addChild(&mix0);
     menuMIX.addChild(&mix1);
     menuMIX.addChild(&mix2);
     menuMIX.addChild(&mix3);
+    */
 }
 
 void setupEnvelopeMenu(){
-    menuENV.addChild(&envAdd);
-    menuENV.addChild(&envConfig);
-    menuENV.addChild(&envRoute);
-    menuENV.addChild(&envDelete);
+    menuENV.addChild(&envFilter);
+    menuENV.addChild(&envAmp);
+    menuENV.addChild(&envLFO);    
 }
 
 void setupEffectsMenu(){

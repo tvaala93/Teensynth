@@ -55,8 +55,8 @@ void DisplayManager::show(bool color) {
         case MODE_TEXT:
             showText();
             break;
-        case MODE_GRAPHIC:
-            showGraphic();
+        case MODE_ICON:
+            showIcons();
             break;
         default:
             break;
@@ -90,15 +90,23 @@ void DisplayManager::showText() {
     display.display(); 
 }
 
-void DisplayManager::showGraphic(){
+void DisplayManager::showIcons(){
     // Clear the display work area?
-    Serial.println("show Graphic");
+    Serial.println("show Icons");
     //display.fillRect(0, 9, SCREEN_WIDTH, SCREEN_HEIGHT - 8, SSD1306_BLACK);
     
     // Draw each icon
+    /*
     for (int i = 0; i < int(currentMenu->getIconCount()); ++i) {
         drawIcon(currentMenu->getIcon(i));
-    }    
+    }
+    */
+    
+    drawIcon(0,0);
+    drawIcon(1,0);
+    drawIcon(2,0);
+    drawIcon(3,0);
+    
     // Show the display
     display.display();
 }
@@ -138,20 +146,48 @@ void DisplayManager::highlight(int8_t index){
 // Helper Functions
 // ===================================================================================
 
-void DisplayManager::drawIcon(Icon icon){
-    // Draw the icon on the display
-    display.fillCircle(icon.x, icon.y + MSPRITE_HEIGHT/2, MSPRITE_WIDTH/2, SSD1306_BLACK);
-    display.drawBitmap(icon.x-MSPRITE_WIDTH/2, icon.y, icon.bmp, MSPRITE_WIDTH, MSPRITE_HEIGHT, SSD1306_WHITE);
-    display.drawCircle(icon.x, icon.y + MSPRITE_HEIGHT/2, MSPRITE_WIDTH/2, SSD1306_WHITE);
-
+void DisplayManager::drawIcon(int slot, int dir){
+    Icon* icon = currentMenu->getIcon(slot, dir);
+    Slot* tmp = currentMenu->getSlot(slot);
     int16_t x1, y1;
-    uint16_t w, h;
+    uint16_t w, h, iconX;
+    iconX = 32*slot + 16;
     display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+    
+    // Draw the icon on the display
+    display.fillCircle(iconX, BASE_ICON_Y + MSPRITE_HEIGHT/2, MSPRITE_WIDTH/2, SSD1306_BLACK);
+    if (icon->bmp != nullptr) {
+        display.drawBitmap(iconX-MSPRITE_WIDTH/2, BASE_ICON_Y, icon->bmp, MSPRITE_WIDTH, MSPRITE_HEIGHT, SSD1306_WHITE);
+    }
+    else if (tmp->value) {
+        display.getTextBounds(tmp->value, 128, 0, &x1, &y1, &w, &h);
+        display.fillRect(iconX - w / 2, BASE_ICON_Y+4, w, h, SSD1306_BLACK);
+        display.setCursor(iconX - w / 2, BASE_ICON_Y+4);
+        display.print(tmp->value); 
+    }
+
+    // Draw the circle around the icon    
+    display.drawCircle(iconX, BASE_ICON_Y + MSPRITE_HEIGHT/2, MSPRITE_WIDTH/2, SSD1306_WHITE);
+    // TODO draw arc for the value if not a bitmap
+    if(icon->bmp == nullptr && tmp->value){
+        int nSegs = int(tmp->value * 120 / tmp->max);
+        fillArc2(iconX, BASE_ICON_Y + MSPRITE_HEIGHT/2, 180, nSegs, MSPRITE_WIDTH/2, 4, SSD1306_WHITE);
+    }
+    
     // Calculate the width and height of the label
-    display.getTextBounds(icon.label, 128, 0, &x1, &y1, &w, &h);
-    display.fillRect(icon.x - w / 2, icon.y + MSPRITE_WIDTH, w, h, SSD1306_BLACK);
-    display.setCursor(icon.x - w / 2, icon.y + MSPRITE_WIDTH);
-    display.print(icon.label);    
+    if(icon->label != nullptr){
+        display.getTextBounds(icon->label, 128, 0, &x1, &y1, &w, &h);
+        display.fillRect(iconX - w / 2, BASE_ICON_Y + MSPRITE_WIDTH, w, h, SSD1306_BLACK);
+        display.setCursor(iconX - w / 2, BASE_ICON_Y + MSPRITE_WIDTH);
+        display.print(icon->label); 
+    }
+    // Calculate the width and height of the above text
+    if(icon->above != nullptr){
+        display.getTextBounds(icon->above, 128, 0, &x1, &y1, &w, &h);
+        display.fillRect(iconX - w / 2, BASE_ICON_Y - MSPRITE_WIDTH/2, w, h, SSD1306_BLACK);
+        display.setCursor(iconX - w / 2, BASE_ICON_Y - MSPRITE_WIDTH/2);
+        display.print(icon->above); 
+    }     
 
     //display.display();    
 }
@@ -177,6 +213,10 @@ void DisplayManager::printText(int yOffset, const String& text, bool highlight) 
     }
     display.setCursor(0, yOffset);
     display.print(text);
+}
+
+MenusOLED* DisplayManager::getCurrentMenu(){
+    return currentMenu;
 }
 
 // ==================================================================================
@@ -211,8 +251,8 @@ void DisplayManager::handleNavigation(int encDir){
             case MODE_TEXT:
                 handleTextNavigation(encDir);
                 break;
-            case MODE_GRAPHIC:
-                handleGraphicNavigation(encDir);
+            case MODE_ICON:
+                handleIconNavigation(encDir);
                 break;
             default:
                 break;
@@ -237,9 +277,9 @@ void DisplayManager::handleTextNavigation(int encDir){
     Serial.println(textOffset);
 }
 
-void DisplayManager::handleGraphicNavigation(int encDir){
-// Handle navigation when in graphic mode
-Serial.println("handleGraphicNavigation");  
+void DisplayManager::handleIconNavigation(int encDir){
+    // Handle navigation when in icon mode
+    Serial.println("handleIconNavigation");  
 }
 
 void DisplayManager::navigateForward(){
@@ -288,4 +328,59 @@ void DisplayManager::navigateBackward(){
         textOffset = 0; // Reset text offset when switching menus
         show(currentMenu->deactivate());
     }
+}
+
+// ==================================================================================
+// Other Functions
+// ==================================================================================
+
+// #########################################################################
+// Draw a circular or elliptical arc with a defined thickness
+// #########################################################################
+
+// x,y == coords of centre of arc
+// start_angle = 0 - 359
+// seg_count = number of 3 degree segments to draw (120 => 360 degree arc)
+// rx = x axis radius
+// yx = y axis radius
+// w  = width (thickness) of arc in pixels
+// colour = 16 bit colour value
+// Note if rx and ry are the same then an arc of a circle is drawn
+
+
+#define DEG2RAD 0.0174532925
+void DisplayManager::fillArc2(int x, int y, int start_angle, int seg_count, int r, int w, bool colour)
+{
+
+  byte seg = 3; // Segments are 3 degrees wide = 120 segments for 360 degrees
+  byte inc = 3; // Draw segments every 3 degrees, increase to 6 for segmented ring
+
+    // Calculate first pair of coordinates for segment start
+    float sx = cos((start_angle - 90) * DEG2RAD);
+    float sy = sin((start_angle - 90) * DEG2RAD);
+    uint16_t x0 = sx * (r - w) + x;
+    uint16_t y0 = sy * (r - w) + y;
+    uint16_t x1 = sx * r + x;
+    uint16_t y1 = sy * r + y;
+
+  // Draw colour blocks every inc degrees
+  for (int i = start_angle; i < start_angle + seg * seg_count; i += inc) {
+
+    // Calculate pair of coordinates for segment end
+    float sx2 = cos((i + seg - 90) * DEG2RAD);
+    float sy2 = sin((i + seg - 90) * DEG2RAD);
+    int x2 = sx2 * (r - w) + x;
+    int y2 = sy2 * (r - w) + y;
+    int x3 = sx2 * r + x;
+    int y3 = sy2 * r + y;
+
+    display.fillTriangle(x0, y0, x1, y1, x2, y2, colour);
+    display.fillTriangle(x1, y1, x2, y2, x3, y3, colour);
+
+    // Copy segment end to sgement start for next segment
+    x0 = x2;
+    y0 = y2;
+    x1 = x3;
+    y1 = y3;
+  }  
 }

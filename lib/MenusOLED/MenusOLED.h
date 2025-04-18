@@ -14,23 +14,13 @@
 #define TEXT_AREA_OFFSET 17 // Offset for text area
 #define MENU_NAME_HEIGHT 8 // Height of menu name area
 
-//#define NUM_OPTIONS 16 // Number of options allowed in a text menu by default
-
-//#define MODE_DEFAULT 0 // Ascii 'O'
-//#define MODE_TEXT 1 // Ascii 'T'
-//#define MODE_GRAPHIC 2 // Ascii 'G'
-
 enum MenuModes {
     MODE_DEFAULT,
     MODE_TEXT,
-    MODE_GRAPHIC
+    MODE_ICON,
+    MODE_GRID,
+    MODE_LINE
 };
-
-/*
-#define NAV_DEFAULT 0 // Horizontal scrolling
-#define NAV_TEXT 1 // Vertical scrolling for text menus
-#define NAV_GRAPH 2 // TBD for graphic menus
-*/
 
 // ================================================================================================
 // 8x16 pixel sprites
@@ -238,29 +228,50 @@ const unsigned char teensynthlogo [] PROGMEM = {
 
 // End other BMPs ---------------------------------------------------------------------------------
 
+// An Icon describes the appearance of a slot
+// If an icon does not have a bitmap, the slot will be referenced for the value
 struct Icon {
     const unsigned char* bmp;
     const char* label;
-    int x;
-    int y;
+    const char* above;  
 };
+
+// Pointers to the value modified by each encoder        
+// A Slot describes how to handle an encoder's input
+// Storing this in MenusOLED because the controls depend on which menu is active
+struct Slot {
+    float* effector;    
+    float min;
+    float max;
+    float step=1;
+    float value;
+    float scale=1.0;
+};
+
 
 class MenusOLED {
     protected:    
         int mode;
-        String menuName;
-        //Adafruit_SSD1306& display;
-        const unsigned char* menuLogo; 
-        //std::vector<String> optionList;
+        String menuName;        
+        const unsigned char* menuLogo;         
         MenusOLED* parent;
         bool isActive;
                     
         std::vector<MenusOLED*> children;
-        std::vector<Icon> icons;
-        int8_t iconIndex;
+        
+        //std::vector<Icon> icons;
+        //int8_t iconIndex;
+
+        // Numbering based off slot0 being the blue encoder
+        // Create a fixed-size array of vectors using std::array
+        //std::array<std::vector<Icon>, 4> slotIcons;
+        std::vector<Icon>* slotIcons[4]; // Array of vectors for icons in each slot
+        int8_t slotIconIndex[4]; // Array tracking active icon index per slot
+        Slot* slots[4]; // Array of slot pointers
+
     public:
         MenusOLED(int modee, String name, const unsigned char* logo)
-        : mode(modee), menuName(name), menuLogo(logo), parent(nullptr), isActive(false), iconIndex(0) {}
+        : mode(modee), menuName(name), menuLogo(logo), parent(nullptr), isActive(false){}
         
         // Tree Functions
         void addChild(MenusOLED* child);
@@ -272,9 +283,9 @@ class MenusOLED {
         MenusOLED* getSibling(int dir);
 
         // Graphic Functions
-        void addIcon(Icon icon);
-        Icon getIcon(int8_t index);
-        size_t getIconCount();
+        void addIcon(int slot, Icon icon);
+        Icon* getIcon(int slot, int8_t dir);
+        size_t getIconCount(uint8_t slot);
         const unsigned char* getLogo();
         
         // Activation Functions
@@ -282,9 +293,16 @@ class MenusOLED {
         bool deactivate();        
         bool getActive();
 
+        // Control Functions
+        void setPtr(uint8_t index, float* ptr);
+        void setSlot(uint8_t index, int8_t min, int8_t max, int8_t step, float scale, float* ptr);
+        Slot* getSlot(uint8_t index);
+        void writeSlot(uint8_t index, int8_t val);
+
         // Utility Functions
         String getName();
         uint8_t getMode();
+        
         //bool testText(uint8_t i);
         MenusOLED* findMenuByName(const String& name);
 
@@ -294,5 +312,3 @@ class MenusOLED {
 // ================================================================================================
 // Helper Functions 
 // ================================================================================================
-
-//void drawIcon(Icon icon, Adafruit_SSD1306& display);

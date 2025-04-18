@@ -75,25 +75,114 @@ const unsigned char* MenusOLED::getLogo(){
     return menuLogo;
 }
 
-void MenusOLED::addIcon(Icon icon) {
-    icons.push_back(icon);
+void MenusOLED::addIcon(int slot, Icon icon) {
+    if(slot < 4){
+        slotIcons[slot]->push_back(icon);
+        return;
+    }
+    else{
+        Serial.println("Error addIcon: slot out of bounds");
+        return;
+    }    
     //drawIcon(icon, display);
 }
 
-Icon MenusOLED::getIcon(int8_t dir) {    
-    if (iconIndex+dir < 0) iconIndex = icons.size()-1;
-    else if (iconIndex+dir >= int(icons.size())) iconIndex = 0;
-    else iconIndex += dir;
+Icon* MenusOLED::getIcon(int slot, int8_t dir) {
+    // Valdiate input
+    if (slot >= 4 || slot < 0) {
+        Serial.println("Error getIcon: slot out of bounds");
+        return nullptr;
+    }
+    if (slotIcons[slot]->empty()) {
+        Serial.println("Error getIcon: no icons in slot");
+        return nullptr;
+    }
+    //if (iconIndex+dir < 0) iconIndex = icons.size()-1;    
+
+    // Handle wraparound
+    if (slotIconIndex[slot]+dir < 0) slotIconIndex[slot] = slotIcons[slot]->size()-1;
+    else if (slotIconIndex[slot]+dir >= int(slotIcons[slot]->size())) slotIconIndex[slot] = 0;
+    // Update the icon index
+    else slotIconIndex[slot] += dir;
     Serial.print("New Icon index: ");
-    Serial.println(iconIndex);
-    return icons[iconIndex];
+    Serial.println(int(slotIconIndex[slot]));
+    return &slotIcons[slot]->at(slotIconIndex[slot]);
 }
 
-size_t MenusOLED::getIconCount(){
-    return icons.size();
+size_t MenusOLED::getIconCount(uint8_t slot){
+    if (slot >= 4 || slot < 0) {
+        Serial.println("Error getIconCount: slot out of bounds");
+        return 0;
+    }
+    if (slotIcons[slot]->empty()) {
+        Serial.println("Error getIconCount: no icons in slot");
+        return 0;
+    }
+    return slotIcons[slot]->size();
 };
 
-// Utility Functions --------------------------------------------------------------------------
+
+// Control Functions ------------------------------------------------------------------------------
+void MenusOLED::setSlot(uint8_t index, int8_t min, int8_t max, int8_t step, float scale, float* ptr){
+    if(index < 5) {
+        slots[index]->min = min;
+        slots[index]->max = max;
+        slots[index]->step = step;
+        slots[index]->scale = scale;
+        slots[index]->effector = ptr;
+    }
+    else {
+        Serial.println("Error setSlot: index out of bounds");
+    }
+}
+
+Slot * MenusOLED::getSlot(uint8_t index){
+    if(index < 5) {
+        return slots[index];
+    }
+    else {
+        Serial.println("Error getSlot: index out of bounds");
+        return nullptr;
+    }
+}
+
+void MenusOLED::setPtr(uint8_t index, float* ptr){    
+    if(index < 5) {
+        slots[index]->effector = ptr;
+    }
+    else {
+        Serial.println("Error setPtr: index out of bounds");
+    }
+}
+
+void MenusOLED::writeSlot(uint8_t index, int8_t dir){
+    if (slots[index]->effector) {
+        int val = int(dir*slots[index]->step);
+        // Ensure the value is within the min and max range
+        // Wrapping the value around if it exceeds the limits
+        if (slots[index]->value + val < slots[index]->min) {
+            slots[index]->value = slots[index]->max;
+        }
+        else if (slots[index]->value + val > slots[index]->max) {
+            slots[index]->value = slots[index]->min;
+        }
+        else {
+            slots[index]->value += val * slots[index]->step;
+        }
+        // Update the value
+        *slots[index]->effector = slots[index]->value;
+        slots[index]->value += val;
+        Serial.print("Blue Encoder: ");
+        Serial.println(*slots[index]->effector);
+    }
+    else {
+        Serial.print("No pointer set! ");
+        Serial.println(index);
+    }
+};
+
+
+// Utility Functions ------------------------------------------------------------------------------
 String MenusOLED::getName(){
     return menuName;
 }
@@ -106,6 +195,7 @@ MenusOLED* MenusOLED::findMenuByName(const String& name) {
     }
     return nullptr;
 }
+
 
 MenusOLED::~MenusOLED(){}
 
