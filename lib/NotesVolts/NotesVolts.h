@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <cmath>
+#include <Audio.h>
+
 using namespace std;
 
 // Frequencies
@@ -25,27 +27,48 @@ using namespace std;
 float volt_to_freq(float volt);
 
 struct Oscillator {
-    float freq;
-    uint8_t wave;
-    uint8_t octv;
-    float tuneV;
-    float pulseWidth;
-    float gain;
+    //float freq;
+    AudioSynthWaveform *audioObj = nullptr;
+    int8_t wave =0;
+    int8_t octv = 3;
+    int8_t tune = 0; // V/octv, NOT frequency
+    int8_t pulseWidth = 50;
+    int8_t gain = 100;
+    int8_t lastWave = 0;    
 };
 struct LFO {
-    float freq;
-    uint8_t wave;
-    float tuneV;
-    float pulseWidth;
-    float gain;
+    //float freq;
+    AudioSynthWaveform *audioObj = nullptr;
+    int8_t wave =0;
+    int8_t tune; // V/octv, NOT frequency
+    int8_t pulseWidth;
+    int8_t gain;
+    int8_t lastWave = 0;    
 };
 struct Filter {
+    AudioFilterLadder *audioObj = nullptr;
     float cutoffFreq;
-    float res;
+    float res;    
 };
 struct Envelope {
-    float attack;
-    float decay;
-    float sustain;
-    float release;
+    AudioEffectEnvelope *audioObj = nullptr;
+    int8_t attack;
+    int8_t decay;
+    int8_t sustain;
+    int8_t release;    
 };
+struct Mixer {
+    AudioMixer4 *audioObj = nullptr;
+    int8_t chan0 = 50;
+    int8_t chan1 = 50;
+    int8_t chan2 = 50;
+    int8_t chan3 = 50;
+};
+
+/*
+int updateOSC(Oscillator *oscRef, AudioSynthWaveform *waveObj);
+int updateLFO(LFO *lfoRef, AudioSynthWaveform *waveObj);
+int updateVCF(Filter *vcfRef, AudioFilterLadder *filtObj);
+int updateENV(Envelope *envRef, AudioEffectEnvelope *envObj);
+int updateMIX(Mixer *mixRef, AudioMixer4 *mixObj);
+*/

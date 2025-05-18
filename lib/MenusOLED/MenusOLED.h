@@ -1,4 +1,3 @@
-//#include <Wire.h>
 #include <Arduino.h>
 //#include <Adafruit_GFX.h>
 //#include <Adafruit_SSD1306.h>
@@ -236,18 +235,29 @@ struct Icon {
     const char* above;  
 };
 
+enum EffectorTypes {
+    TYP_OSC,
+    TYP_LFO,
+    TYP_FLT,
+    TYP_ENV,
+    TYP_MIX
+};
+
 // Pointers to the value modified by each encoder        
 // A Slot describes how to handle an encoder's input
 // Storing this in MenusOLED because the controls depend on which menu is active
 struct Slot {
-    float* effector;    
-    float min;
-    float max;
-    float step=1;
-    float value;
-    float scale=1.0;
+    int8_t* effector=nullptr; // using float pointer to enable value sharing b/w slots
+    int8_t minVal; // minimum value, NOT minimum onValueChange input
+    int8_t maxVal; // maximum value, NOT maximum onValueChange input
+    int8_t step=1;
+    //float value=0;
+    //float scale=1.0;
+    const char* name=nullptr;
+    //EffectorTypes effectorType;
+    std::function<float(float)> scalingFunction;
+    std::function<void(float)> onValueChange; // Callback function
 };
-
 
 class MenusOLED {
     protected:    
@@ -265,8 +275,8 @@ class MenusOLED {
         // Numbering based off slot0 being the blue encoder
         // Create a fixed-size array of vectors using std::array
         //std::array<std::vector<Icon>, 4> slotIcons;
-        std::vector<Icon>* slotIcons[4]; // Array of vectors for icons in each slot
-        int8_t slotIconIndex[4]; // Array tracking active icon index per slot
+        std::vector<Icon> slotIcons[4]; // Array of vectors for icons in each slot
+        int8_t slotIconIndex[4] = {0,0,0,0}; // Array tracking active icon index per slot
         Slot* slots[4]; // Array of slot pointers
 
     public:
@@ -295,9 +305,20 @@ class MenusOLED {
 
         // Control Functions
         void setPtr(uint8_t index, float* ptr);
-        void setSlot(uint8_t index, int8_t min, int8_t max, int8_t step, float scale, float* ptr);
+        void setSlot(
+            uint8_t index, 
+            int8_t min, 
+            int8_t max, 
+            int8_t step, 
+            //float scale, 
+            int8_t* ptr, 
+            //float initialValue, 
+            const char* name=nullptr,
+            std::function<float(float)> scalingFunction = [](float val){return val;},
+            std::function<void(float)> onValueChange = [](float val){}// Callback param
+        );
         Slot* getSlot(uint8_t index);
-        void writeSlot(uint8_t index, int8_t val);
+        void writeSlot(uint8_t index, int8_t dir);
 
         // Utility Functions
         String getName();

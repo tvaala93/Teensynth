@@ -1,4 +1,3 @@
-//#include <Arduino.h>
 #include <Wire.h>
 
 // Analog Inputs
@@ -36,9 +35,7 @@
 #define UPDATE_MICROS 400
 #define DEBOUNCE_DELAY 200 // ms
 
-constexpr uint16_t ENCODER_INTERVAL = 5; // ms
-constexpr uint16_t ENCODER_DEBOUNCE = 50; // ms
-constexpr uint16_t PCA_INTERVAL = 1500; // us
+// constexpr int ENCODER_INTERVAL_MS = 5; // ms (Removed duplicate definition)
 
 /*  --  LEDs  --
  *   PCA1:
@@ -169,3 +166,9 @@ class Keyboard{
         int pressHandler();
         int releaseHandler();
 };
+
+constexpr int ENCODER_INTERVAL_MS = 5;
+constexpr int ENCODER_DEBOUNCE_MS = 50; // ms (Removed duplicate definition)
+constexpr int BUTTON_INTERVAL_MS = 5;
+constexpr int POTENTIOMETER_INTERVAL_MS = 5;
+constexpr int PCA_INTERVAL_US = 1500; // us

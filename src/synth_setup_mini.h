@@ -13,8 +13,8 @@
 //#include <Adafruit_SSD1306.h>
 
 #define APP_NAME "Teensynth - Mini"
-#define APP_VERSION "0.0.1"
-#define APP_DATE "2025-04-12"
+#define APP_VERSION "0.0.2"
+#define APP_DATE "2025-05-17"
 #define APP_AUTHOR "Ted Vaala"
 
 // ================================================================================================
@@ -140,3 +140,4 @@ extern std::vector<Icon> waveIcons;
 void ioSetup();
 void screenSetup();
 void startupScreen();
+void setupAudio();

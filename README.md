@@ -1,5 +1,5 @@
 # Teensynth Sourcecode
-Updated 3/31/2025
+Updated 5/18/2025 - Checking off TODOs from **Make Some Noise**
 
 ## Contents  
 - [TODO](#todo)
@@ -8,12 +8,27 @@ Updated 3/31/2025
 - [Error Codes](#error-codes)
 
 ## TODO - Cleanup and Optimize
-- [ ] Cleanup / optimize menu system into more of a tree system
 - [ ] Cleanup / optimize io library for faster access
 - [ ] Cleanup / optimize setup functions
+- [ ] Make UI consistent (Menu Activation, knob control, etc.)
+- [ ] Add useful comments to code
 
-## IO Validation -- COMPLETE
-- [X] Initial power-up from micro-USB
+## TODO - Make Some Noise
+- [X] Get Oscillator menus connected to sound objects
+- [X] Get Mixer menus connected to sound object
+- [ ] Get Envelopes connected to sound objects
+- [ ] Get Effects menus connected to sounds objects
+
+## TODO - Menu Layouts
+- [X] Organize menu system into a tree structure
+- [X] Create slot system for per-menu encoder control
+- [X] Create text menu system
+- [X] Create round icon menu system
+- [ ] Create ADSR menu system for Envolopes
+- [ ] Create grid menu system for Mod Matrix
+
+## IO Validation -- COMPLETE  
+- [X] Initial power-up from micro-USBv
 - [X] Full stack sound board test; do I get startup tone on initial power?
 - [X] Analog read for volume control
 - [X] Analog read for filter control
@@ -33,8 +48,10 @@ This module contains relevant pin definitions for the Teensynth along with class
 - TLED  
 ### MenusOLED  
 This module contains relevant code for organizing the various menu screens that can be shown on the SSD1306 OLED display.  
-
-The current ideology is to have a core menu class with subclasses for text-only menu screens and graphic menu screens
+### DisplayManager
+This module connects relevant data stored in MenusOLED objects to the necessary commands to the Adafruit_GFX library that results in updates to the SSD1306 display
 ### NotesVolts
-This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies
+This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies  
+
+The module also contains structs for organizing Audio objects
 ## Error Codes
