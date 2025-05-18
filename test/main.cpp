@@ -1,18 +1,20 @@
 #include <Arduino.h>
-#include <NotesVolts.h>
-#include <TeensynthIO.h>
-#include <MenusOLED.h>
+//#include <NotesVolts.h>
+//#include <TeensynthIO.h>
+//#include <MenusOLED.h>
 
-#include <Audio.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Audio.h>
+//#include <Wire.h>
+//#include <SPI.h>
+//#include <SD.h>
+//#include <SerialFlash.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
+#include <synth_setup_mini.h>
 
 String revision_string = "teensynth v0.1\nrev: 2.24.25";
 
+/*
 // Standard hardware IO. Do not change without good reason
 PCA9555 pca0(ADDR_PCA0);
 PCA9555 pca1(ADDR_PCA1);
@@ -26,10 +28,12 @@ Encoder ongEnc(pca2);
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // End standard hardware IO
+*/
 
 elapsedMillis tick;
 elapsedMicros utick;
 
+/*
 // GUItool: begin automatically generated code
 AudioSynthWaveform       waveform2;      //xy=443,424
 AudioSynthWaveform       waveform3;      //xy=444,463
@@ -45,6 +49,7 @@ AudioConnection          patchCord5(ladder1, 0, i2s1, 0);
 AudioConnection          patchCord6(ladder1, 0, i2s1, 1);
 AudioControlSGTL5000     sgtl5000_1;     //xy=959,505
 // GUItool: end automatically generated code
+*/
 
 
 // put function declarations here:
@@ -55,6 +60,10 @@ void setup() {
   Serial.begin(9600);
   Wire.begin();
 
+  ioSetup();
+  startupScreen();
+  
+  /*
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -74,6 +83,7 @@ void setup() {
   pca0.config(PCA0_IO0,PCA0_IO1);
   pca1.config(PCA1_IO0,PCA1_IO1);
   pca2.config(PCA2_IO0,PCA2_IO1);
+  */
 
   AudioMemory(20);
   sgtl5000_1.enable();
@@ -90,7 +100,9 @@ void setup() {
 
   mixer1.gain(0,1);
   mixer1.gain(1,1);
-  mixer1.gain(2,1);  
+  mixer1.gain(2,1);
+
+  
   
 }
 

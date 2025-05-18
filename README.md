@@ -1,5 +1,5 @@
 # Teensynth Sourcecode
-Updated 4/10/2025
+Updated 5/18/2025 - Checking off TODOs from **Make Some Noise**
 
 ## Contents  
 - [TODO](#todo)
@@ -7,15 +7,28 @@ Updated 4/10/2025
 - [Modules](#modules)
 - [Error Codes](#error-codes)
 
-## TODO
-- [x] Cleanup / optimize menu system into more of a tree system
+## TODO - Cleanup and Optimize
 - [ ] Cleanup / optimize io library for faster access
 - [ ] Cleanup / optimize setup functions
-- [ ] Refactor DisplayManager to be more templated(?)
-- [ ] Integrate Audio components
+- [ ] Make UI consistent (Menu Activation, knob control, etc.)
+- [ ] Add useful comments to code
 
-## IO Validation -- COMPLETE
-- [X] Initial power-up from micro-USB
+## TODO - Make Some Noise
+- [X] Get Oscillator menus connected to sound objects
+- [X] Get Mixer menus connected to sound object
+- [ ] Get Envelopes connected to sound objects
+- [ ] Get Effects menus connected to sounds objects
+
+## TODO - Menu Layouts
+- [X] Organize menu system into a tree structure
+- [X] Create slot system for per-menu encoder control
+- [X] Create text menu system
+- [X] Create round icon menu system
+- [ ] Create ADSR menu system for Envolopes
+- [ ] Create grid menu system for Mod Matrix
+
+## IO Validation -- COMPLETE  
+- [X] Initial power-up from micro-USBv
 - [X] Full stack sound board test; do I get startup tone on initial power?
 - [X] Analog read for volume control
 - [X] Analog read for filter control
@@ -34,10 +47,11 @@ This module contains relevant pin definitions for the Teensynth along with class
 - Encoder
 - TLED  
 ### MenusOLED  
-This module contains relevant code for organizing the various menu screens that can be shown on the SSD1306 OLED display. The MenusOLED objects are intended to store the specific data and hierarchy of the various menu screens, but these objects do not directly interact with the Adafruit_GFX library or other display code.  
+This module contains relevant code for organizing the various menu screens that can be shown on the SSD1306 OLED display.  
 ### DisplayManager
-This module contains code that directly interacts with the Adafruit_GFX library. It contains functions for drawing the menu bar along the top of the display, showing text lists, showing graphics, and other related functionality.  
-
+This module connects relevant data stored in MenusOLED objects to the necessary commands to the Adafruit_GFX library that results in updates to the SSD1306 display
 ### NotesVolts
-This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies.  
+This module contains definitions for different note frequencies and other functionality helpful in setting and interpretting frequencies  
+
+The module also contains structs for organizing Audio objects
 ## Error Codes

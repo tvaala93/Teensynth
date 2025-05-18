@@ -34,17 +34,17 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //TODO test home menu modes: when in perform mode, have hotkeys for each menuscreen active
 
 std::vector<Icon> testIcons = {
-    {sawtoothBMP, "Wave", 16, 32},
-    {squareBMP, "Octv", 48, 32},
-    {triangleBMP, "Tune", 80, 32},
-    {sineBMP, "Gain", 112, 32}
+    {sawtoothBMP, "Wave",nullptr, 16, 32},
+    {squareBMP, "Octv",nullptr, 48, 32},
+    {triangleBMP, "Tune",nullptr, 80, 32},
+    {sineBMP, "Gain",nullptr, 112, 32}
 };
 
 std::vector<Icon> waveIcons = {
-    {sawtoothBMP, "Wave", 16, 32},
-    {squareBMP, "Octv", 16, 32},
-    {triangleBMP, "Tune", 16, 32},
-    {sineBMP, "Gain", 16, 32}
+    {sawtoothBMP, "Wave",nullptr, 16, 32},
+    {squareBMP, "Octv",nullptr, 16, 32},
+    {triangleBMP, "Tune",nullptr, 16, 32},
+    {sineBMP, "Gain",nullptr, 16, 32}
 };
 
 MenusOLED menuRoot(MODE_DEFAULT,"ROOT",NULL);
@@ -55,15 +55,22 @@ MenusOLED menuHome(MODE_TEXT,"Home", homeBMP);
     MenusOLED homeRecord(MODE_TEXT,"Record Mode", homeBMP);
 MenusOLED menuKeys(MODE_DEFAULT,"Keys", keysBMP);
 MenusOLED menuOSC(MODE_TEXT,"Oscillators",oscBMP);
+    MenusOLED osc0(MODE_ICON,"OSC 0",oscBMP);
+    MenusOLED osc1(MODE_ICON,"OSC 1",oscBMP);
+    MenusOLED osc2(MODE_ICON,"OSC 2",oscBMP);
+    MenusOLED osc3(MODE_ICON,"OSC 3",oscBMP);
+    MenusOLED lfo0(MODE_ICON,"LFO",oscBMP);
+    /*
     MenusOLED oscAdd(MODE_TEXT,"Add",oscBMP);
         MenusOLED oscAdd0(MODE_DEFAULT,"Voice 0",oscBMP);
         MenusOLED oscAdd1(MODE_DEFAULT,"Voice 1",oscBMP);
         MenusOLED oscAdd2(MODE_DEFAULT,"Voice 2",oscBMP);
         MenusOLED oscAdd3(MODE_DEFAULT,"Voice 3",oscBMP);
         MenusOLED oscAddLFO(MODE_DEFAULT,"LFOs",oscBMP);
-    MenusOLED oscConfig(MODE_GRAPHIC,"Configure",oscBMP);          
+    MenusOLED oscConfig(MODE_ICON,"Configure",oscBMP);          
     MenusOLED oscRoute(MODE_DEFAULT,"Route",oscBMP);
     MenusOLED oscDelete(MODE_DEFAULT,"Delete",oscBMP);
+    */
 MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", noiseSHBMP);
 MenusOLED menuMIX(MODE_TEXT,"Mixer", mixBMP);
     MenusOLED mixMain(MODE_DEFAULT,"Main", mixBMP);
