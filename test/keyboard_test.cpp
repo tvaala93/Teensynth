@@ -37,14 +37,15 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // ================================================================================================
 // Setup Menu screens
 // ================================================================================================
-MenusOLED menuHome("HOME", display,homeBMP);
-MenusOLED menuKeys("KEYS", display,keysBMP);
-MenusOLED menuOSC("OSCILLATORS", display,oscBMP);
-MenusOLED menuNSH("NOISE, S&H", display,noiseSHBMP);
-MenusOLED menuMIX("MIXER", display,mixBMP);
-MenusOLED menuFLT("FILTER", display,fltBMP);
-MenusOLED menuENV("ENVELOPE", display,envBMP);
-MenusOLED menuEFF("EFFECTS", display,keysBMP);
+MenusOLED menuRoot(MODE_DEFAULT,"ROOT",NULL);
+MenusOLED menuHome(MODE_TEXT,"Home", homeBMP);
+MenusOLED menuKeys(MODE_DEFAULT,"Keys", keysBMP);
+MenusOLED menuOSC(MODE_TEXT,"Oscillators",oscBMP);
+MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", noiseSHBMP);
+MenusOLED menuMIX(MODE_ICON,"Mixer", mixBMP);
+MenusOLED menuFLT(MODE_DEFAULT,"Filter", fltBMP);
+MenusOLED menuENV(MODE_TEXT,"Envelopes", envBMP);
+MenusOLED menuEFF(MODE_TEXT,"Effects", keysBMP);
 MenusOLED menuArr[] = {
   menuHome,
   menuKeys,
@@ -167,8 +168,8 @@ void setup(){
     display.display();
     delay(3000);
     
-    display.clearDisplay();
-    menuHome.show();
+    //display.clearDisplay();
+    //menuHome.show();
     //display.clearDisplay();
     tick = millis();
     utick = micros();

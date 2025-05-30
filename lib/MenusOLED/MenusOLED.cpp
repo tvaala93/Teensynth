@@ -101,9 +101,9 @@ Icon* MenusOLED::getIcon(int slot, int8_t dir) {
     }
     //if (iconIndex+dir < 0) iconIndex = icons.size()-1;    
 
-    // Handle wraparound
-    if (slotIconIndex[slot]+dir < 0) slotIconIndex[slot] = slotIcons[slot].size()-1;
-    else if (slotIconIndex[slot]+dir >= int(slotIcons[slot].size())) slotIconIndex[slot] = 0;
+    // Handle bounds
+    if (slotIconIndex[slot]+dir < 0) slotIconIndex[slot] = 0;
+    else if (slotIconIndex[slot]+dir >= int(slotIcons[slot].size())) slotIconIndex[slot] = slotIcons[slot].size()-1;
     // Update the icon index
     else slotIconIndex[slot] += dir;
     Serial.print("New Icon index: ");
@@ -191,9 +191,7 @@ void MenusOLED::writeSlot(uint8_t index, int8_t dir){
     if (slots[index]->effector != nullptr) {
 
         int8_t val = int8_t(dir*slots[index]->step);
-        Serial.print("val: ");
-        Serial.println(val);
-        
+                
         // Ensure the value is within the min and max range        
         if (*slots[index]->effector + val < slots[index]->minVal) {
             //slots[index]->value = slots[index]->max;
@@ -207,25 +205,16 @@ void MenusOLED::writeSlot(uint8_t index, int8_t dir){
             *slots[index]->effector += val;
         }
 
-        float scaledVal = slots[index]->scalingFunction(*slots[index]->effector);
-        
-        Serial.print("Effector val: ");
-        Serial.println(*slots[index]->effector);        
-
-        // Trigger the callback
-        if (slots[index]->onValueChange != nullptr) {
+        // Trigger the scaling and callback
+        float scaledVal = slots[index]->scalingFunction(*slots[index]->effector);        
+        if (slots[index]->onValueChange) {
             slots[index]->onValueChange(scaledVal);
-            Serial.print("Scaled val: ");
-            Serial.println(scaledVal);
         }    
-    }
-    
+    }    
     else {
         Serial.print("No pointer set! ");
         Serial.println(index);
     }
-    
-    //return slots[index]->effectorType;
 }
 
 

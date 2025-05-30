@@ -161,14 +161,19 @@ class Keyboard{
         uint8_t rb_wptr; // write pointer
     public:
         Keyboard();
-        void sync();
+        std::array<int8_t, 2> sync();
         void update(uint16_t stat0, uint16_t stat1, uint16_t stat2);
         int pressHandler();
         int releaseHandler();
+        int8_t lastPress;
+        int8_t lastRelease;
+        bool anyKeyPressed;
 };
 
 constexpr int ENCODER_INTERVAL_MS = 5;
 constexpr int ENCODER_DEBOUNCE_MS = 50; // ms (Removed duplicate definition)
 constexpr int BUTTON_INTERVAL_MS = 5;
 constexpr int POTENTIOMETER_INTERVAL_MS = 5;
+constexpr int KEYBOARD_INTERVAL_MS = 20;
+constexpr int KB_UPDATE_INTERVAL = 20;
 constexpr int PCA_INTERVAL_US = 1500; // us

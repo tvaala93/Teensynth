@@ -24,7 +24,7 @@ using namespace std;
 // Working with an input of 0 tunes to a C0 (16.35Hz) 
 #define ROOT_FREQ 16.352
 
-float volt_to_freq(float volt);
+float voltToFreq(float volt);
 
 struct Oscillator {
     //float freq;
@@ -59,10 +59,10 @@ struct Envelope {
 };
 struct Mixer {
     AudioMixer4 *audioObj = nullptr;
-    int8_t chan0 = 50;
-    int8_t chan1 = 50;
-    int8_t chan2 = 50;
-    int8_t chan3 = 50;
+    int8_t chan0 = 0;
+    int8_t chan1 = 0;
+    int8_t chan2 = 0;
+    int8_t chan3 = 0;
 };
 
 /*

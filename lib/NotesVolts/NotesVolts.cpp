@@ -9,7 +9,7 @@ using namespace std;
  * @param volt the value representing the effective voltage of a signal
  * @return the corresponding frequency
  */
-float volt_to_freq(float volt){       
+float voltToFreq(float volt){       
     return ROOT_FREQ * pow(2,volt);
 }
 

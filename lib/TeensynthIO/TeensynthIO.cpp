@@ -264,15 +264,21 @@ Keyboard::Keyboard(){
   last2 = 0; // Value of last tracked read from PCA2
   press2 = 0; // Tracks buttons that were just pressed
   rel2 = 0; // Tracks buttons that were just released
+
+    lastPress = 0;
+    lastRelease = 0;
+
 }
 
   /**
    * @brief This function calls a pressHanlder or releaseHandler 
    * if there is a new event in either buffer
    */
-  void Keyboard::sync(){
-    if(pb_rptr != pb_wptr){pressHandler();}
-    if(rb_rptr != rb_wptr){releaseHandler();}
+  std::array<int8_t, 2> Keyboard::sync(){
+    std::array<int8_t,2> retVals = {-1,-1};
+    if(pb_rptr != pb_wptr){retVals[0] = pressHandler();}
+    if(rb_rptr != rb_wptr){retVals[1] = releaseHandler();}    
+    return retVals;
   }
 
   /**
@@ -308,15 +314,20 @@ Keyboard::Keyboard(){
           if((rel1 >> i) & 1){rel_buf[rb_wptr] = pca1Map[i]; rb_wptr++;}
           if((rel2 >> i) & 1){rel_buf[rb_wptr] = pca2Map[i]; rb_wptr++;}
       }
+
+      // Set boolean: true if any key is pressed, false otherwise
+      anyKeyPressed = (press0 != 0) || (press1 != 0) || (press2 != 0);
   }
   
   int Keyboard::pressHandler(){
-    int retVal = press_buf[pb_rptr];
+    lastPress = press_buf[pb_rptr];
     pb_rptr++;
-    return retVal;
+
+    return lastPress;
 }
   
   int Keyboard::releaseHandler(){
+    /*
     switch(rel_buf[rb_rptr]){
         case -1:
             break;
@@ -326,6 +337,8 @@ Keyboard::Keyboard(){
             //Serial.println("Unhandled");
             break;
     }
+    */
+    lastRelease = rel_buf[rb_rptr];
     rb_rptr++;
-    return 0;
+    return lastRelease;
 }

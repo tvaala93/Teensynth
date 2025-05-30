@@ -79,6 +79,15 @@ extern MenusOLED menuRoot;
 
 
 // ================================================================================================
+// Setup Keyboard
+// ================================================================================================
+
+extern Keyboard KB;
+
+// End keyboard setup -----------------------------------------------------------------------------
+
+
+// ================================================================================================
 // Setup Audio
 // ================================================================================================
 
@@ -113,10 +122,10 @@ asdf = WAVEFORM_SAMPLE_HOLD;
 asdf = WAVEFORM_TRIANGLE_VARIABLE;
 */
 
-extern Oscillator osc0Params;
-extern Oscillator osc1Params;
-extern Oscillator osc2Params;
-extern Oscillator osc3Params;
+extern Oscillator vco0;
+extern Oscillator vco1;
+extern Oscillator vco2;
+extern Oscillator vco3;
 extern LFO lfo0Params;
 extern LFO lfo1Params;
 extern Filter filterParams;

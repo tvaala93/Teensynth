@@ -52,11 +52,16 @@ void DisplayManager::show(bool color) {
     // Update the display based on the mode
     switch (currentMenu->getMode())
     {
+        case MODE_DEFAULT:
+            break;
         case MODE_TEXT:
             showText();
             break;
         case MODE_ICON:
             showIcons();
+            break;
+        case MODE_LINE:
+            showADSR();
             break;
         default:
             Serial.println("Invalid mode");
@@ -91,18 +96,75 @@ void DisplayManager::showText() {
     display.display(); 
 }
 
+/**
+ * @brief Shows the defined icons on screen
+ * 
+ */
 void DisplayManager::showIcons(){
     // Clear the display work area?
     Serial.println("show Icons");    
     //display.fillRect(0, 9, SCREEN_WIDTH, SCREEN_HEIGHT - 8, SSD1306_BLACK);
     
-    // Draw each icon
-    
+    // Draw each icon    
     for (int i = 0; i < 4; ++i) {
         drawIcon(i, 0);
     }
 
     // Show the display
+    display.display();
+}
+
+/**
+ * @brief Shows drawn lines on screen
+ * 
+ * This is leveraged for the ADSR menus
+ */
+void DisplayManager::showADSR(){
+    // clear the text area
+    display.fillRect(0,9,SCREEN_WIDTH,SCREEN_HEIGHT-8,SSD1306_BLACK);
+        
+    uint8_t x0=0;
+    uint8_t y0=SCREEN_HEIGHT;
+    
+    uint8_t y1 = 16; // Start and end coordinates
+    
+    int8_t times[4];
+    
+    // Get the envelope params
+    for (int i = 0; i < 4; ++i) {
+        times[i] = *currentMenu->getSlot(i)->effector; //times[2] will be the sustain level, not a time        
+    }
+
+    // Draw Attack Line
+    int8_t width = map(times[0],0,100,0,SCREEN_WIDTH/2);
+    display.drawLine(x0,y0,x0+width,y1,SSD1306_WHITE);
+    x0+=width;
+    y0=y1;
+    // Draw Decay Line
+    width = map(times[1],0,100,0,SCREEN_WIDTH/2);
+    y1 = map(times[2],0,100,0,SCREEN_HEIGHT-16);
+    y1 = SCREEN_HEIGHT - y1;
+    display.drawLine(x0,y0,x0+width,y1,SSD1306_WHITE);
+    x0+=width;
+    y0=y1;
+    // Draw Sustain Line
+    width = SCREEN_WIDTH-x0-map(times[3],0,100,0,SCREEN_WIDTH/2);
+    display.drawLine(x0,y0,x0+width,y1,SSD1306_WHITE);
+    x0+=width;
+    // Draw Release Line
+    width = map(times[3],0,100,0,SCREEN_WIDTH/2);
+    y1 = SCREEN_HEIGHT;
+    display.drawLine(x0,y0,x0+width,y1,SSD1306_WHITE);
+    // Update Text (Use the yellow space)
+    display.setTextColor(SSD1306_WHITE,SSD1306_BLACK);
+    String ADSR = "ADSR";
+    for(int i=0;i<4;i++){
+        display.setCursor(i*32,9);
+        display.print(ADSR[i]);
+        display.print(":");
+        display.setCursor(i*32+12,9);
+        display.print(times[i]);
+    }
     display.display();
 }
 
@@ -113,7 +175,7 @@ void DisplayManager::showIcons(){
  */
 void DisplayManager::highlight(int8_t index){        
     if (currentMenu->getMode() != MODE_TEXT || index < 0 || index >= int(currentMenu->getChildCount())) {
-        Serial.println("Invalid index or mode");
+        Serial.printf("Invalid index or mode");
         return; // Invalid index or mode
     }    
     // Adjust optionIndex if the highlighted option is out of view
@@ -140,6 +202,11 @@ void DisplayManager::highlight(int8_t index){
 // ===================================================================================
 // Helper Functions
 // ===================================================================================
+
+std::array<int8_t,2> DisplayManager::drawADSR(int slotNum){
+    return {-1,-1};
+}
+
 
 void DisplayManager::drawIcon(int slotNum, int dir){
     Icon* icon = currentMenu->getIcon(slotNum, dir);    
@@ -241,7 +308,7 @@ void DisplayManager::handleNavigation(int encDir){
       // If menu is not active, navigate left/right
       if(!currentMenu->getActive() || currentMenu->getMode() == MODE_DEFAULT){      
         if(currentMenu->getSibling(encDir) != nullptr){        
-          currentMenu = currentMenu->getSibling(encDir);        
+          currentMenu = currentMenu->getSibling(encDir);          
           textOffset = 0; // Reset text offset when switching menus
           show(currentMenu->deactivate());
         }
@@ -254,7 +321,7 @@ void DisplayManager::handleNavigation(int encDir){
         // If menu is active, navigate based on screen type        
         switch(currentMenu->getMode()){
             case MODE_DEFAULT:
-                Serial.println("Default mode");
+                Serial.println("Getting here shouldn't be possible...");
                 break;      
             case MODE_TEXT:
                 handleTextNavigation(encDir);
@@ -303,8 +370,9 @@ void DisplayManager::navigateForward(){
         if(currentMenu->getChild(optionIndex) != nullptr){            
             currentMenu = currentMenu->getChild(optionIndex);            
             textOffset = 0; // Reset text offset when switching menus
-            if(currentMenu->getChildCount()>0) show(currentMenu->deactivate()); // Added logic to automatically activate childless menus when going forward
-            else show(currentMenu->activate());
+            //if(currentMenu->getChildCount()>0) show(currentMenu->deactivate()); // Added logic to automatically activate childless menus when going forward
+            //else show(currentMenu->activate());
+            show(currentMenu->deactivate());
         }
     }
     else{

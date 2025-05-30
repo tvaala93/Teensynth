@@ -27,25 +27,33 @@ elapsedMicros pca2Timer = 1250;
 Encoder* encoders[] = {&blkEnc, &bluEnc, &grnEnc, &ylwEnc, &ongEnc};
 elapsedMillis encoderTimers[] = {0, 1, 2, 3, 4};
 elapsedMillis buttonTimer = 0;
-elapsedMillis potTimer = 0;
-
+elapsedMillis potTimer = 1;
+elapsedMillis keyTimer = 2;
+elapsedMillis kbUpdateTimer = 0;
 
 int8_t direction = 0;
 //uint8_t navigationMode = MODE_DEFAULT;
+
+// Track keyboard press/release
+std::array<int8_t,2> keyVals;
 
 // Every 1500 microseconds, read each PCA
 void handlePCAReads(){
   if (pca0Timer >= PCA_INTERVAL_US) {
     pca0.read();
-    pca0Timer = 0;
+    pca0Timer = 0;     
   }
   if (pca1Timer >= PCA_INTERVAL_US) {
     pca1.read();
-    pca1Timer = 0;
+    pca1Timer = 0;    
   }
   if (pca2Timer >= PCA_INTERVAL_US) {
     pca2.read();
-    pca2Timer = 0;
+    pca2Timer = 0;    
+  }
+  if (kbUpdateTimer >= KB_UPDATE_INTERVAL){
+    KB.update(pca0.getStatus(),pca1.getStatus(),pca2.getStatus());
+    kbUpdateTimer = 0;
   }
 }
 
@@ -58,33 +66,29 @@ void handleEncoderUpdates(){
       if(direction != 0) {
         if(i==0) dispMgr.handleNavigation(direction);
         else{   
-          if(dispMgr.getCurrentMenu()->getActive()){
+          //if(dispMgr.getCurrentMenu()->getActive()){
             dispMgr.getCurrentMenu()->writeSlot(i-1, direction);
-            dispMgr.drawIcon(i-1, direction);
-            display.display();
-            /*
-            switch (effector)
+            switch (dispMgr.getCurrentMenu()->getMode())
             {
-            case TYP_OSC:
-              updateOSC();
+            case MODE_DEFAULT:
+              /* code */
               break;
-            case TYP_LFO:
-              updateLFO();
+            case MODE_TEXT:
               break;
-            case TYP_ENV:
-              updateENV();
+            case MODE_ICON:
+              dispMgr.drawIcon(i-1, direction);
+              display.display();
               break;
-            case TYP_FLT:
-              updateVCF();
+            case MODE_LINE:
+              dispMgr.show(SSD1306_WHITE);
               break;
-            case TYP_MIX:
-              updateMIX();
+            case MODE_GRID:
               break;
             default:
               break;
-            }
-            */
-          }
+            }                       
+          //}
+          //else Serial.println("Not active");
         }
 
       }
@@ -118,12 +122,38 @@ void handleAnalogKnobs(){
     // adjust the filter
     float freq_cut = (float)analogRead(FREQ);
     freq_cut = map(freq_cut,0,1023,0,10); // Converting to a "voltage" 10v = C10 note
-    freq_cut = volt_to_freq(freq_cut);
+    freq_cut = voltToFreq(freq_cut);
     ladder1.frequency(freq_cut);
 
     int resonance = analogRead(RES);  
     ladder1.resonance(1.5 * (float)resonance/1023.0);
     potTimer = 0; // reset the timer
+  }
+}
+
+void handleKeyboard(){
+  if(keyTimer % KEYBOARD_INTERVAL_MS == 0){
+    keyVals = KB.sync();
+    switch(keyVals[0]){
+      case -1:
+        break;
+      case 25: case 26: case 27: case 28:
+        envelopeAmp.noteOn();
+        break;
+      default:
+        waveform0.frequency(voltToFreq(vco0.tune/120.0 + vco0.octv + keyVals[0]/12.0));
+        waveform1.frequency(voltToFreq(vco1.tune/120.0 + vco1.octv + keyVals[0]/12.0));
+        waveform2.frequency(voltToFreq(vco2.tune/120.0 + vco2.octv + keyVals[0]/12.0));
+        waveform3.frequency(voltToFreq(vco3.tune/120.0 + vco3.octv + keyVals[0]/12.0));
+        envelopeAmp.noteOn();
+        break;
+    }
+    //if(keyVals[1] >= 0){ // Key 28 was released
+    if(KB.lastRelease == KB.lastPress ){
+    //if(!KB.anyKeyPressed ){ 
+      envelopeAmp.noteOff();
+    }
+    keyTimer = 0;
   }
 }
 
@@ -155,6 +185,7 @@ void loop(){
   handleEncoderUpdates();
   handleButtonPresses();
   handleAnalogKnobs();
+  handleKeyboard();
   tick = millis();
   
   /*

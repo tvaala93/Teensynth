@@ -44,8 +44,9 @@ AudioConnection          patchCord1(waveform1, 0, mixer1, 1);
 AudioConnection          patchCord2(waveform2, 0, mixer1, 2);
 AudioConnection          patchCord3(waveform3, 0, mixer1, 3);
 AudioConnection          patchCord4(mixer1, 0, ladder1, 0);
-AudioConnection          patchCord5(ladder1, 0, i2s1, 0);
-AudioConnection          patchCord6(ladder1, 0, i2s1, 1);
+AudioConnection          patchCord5(ladder1, envelopeAmp);
+AudioConnection          patchCord6(envelopeAmp, 0, i2s1, 0);
+AudioConnection          patchCord7(envelopeAmp, 0, i2s1, 1);
 AudioControlSGTL5000     sgtl5000_1;     
 
 /*
@@ -75,12 +76,12 @@ std::vector<LFO*> lfoParams = {&lfo0Params,&lfo1Params};
 Filter filterParams = {&ladder1,1000.0, 0.5};
 //std::vector<Filter*> fil
 // Envelope params
-Envelope envVCAParams = {&envelopeAmp,1, 1, 5, 1};
-Envelope envVCFParams = {&envelopeFilter,1, 1, 5, 1};
-Envelope envLFOParams = {&envelopeLFO,1, 1, 5, 1};
-std::vector<Envelope*> envelopeParams = {&envVCAParams, &envVCFParams, &envLFOParams};
+Envelope envVCAParams = {&envelopeAmp,50, 50, 50, 50};
+Envelope envFLTParams = {&envelopeFilter,50, 50, 50, 50};
+Envelope envLFOParams = {&envelopeLFO,50, 50, 50, 50};
+//std::vector<Envelope*> envelopeParams = {&envVCAParams, &envFLTParams, &envLFOParams};
 // Mixer params
-Mixer mixer0Params = {&mixer1,0.25,0.25,0.25,0.25};
+Mixer mixer0Params = {&mixer1,0,0,0,0};
 std::vector<Mixer*> mixerParams = {&mixer0Params};
 
 // End setup audio --------------------------------------------------------------------------------
@@ -142,9 +143,9 @@ MenusOLED menuNSH(MODE_DEFAULT,"Noise, S&H", noiseSHBMP);
 MenusOLED menuMIX(MODE_ICON,"Mixer", mixBMP);
 MenusOLED menuFLT(MODE_DEFAULT,"Filter", fltBMP);
 MenusOLED menuENV(MODE_TEXT,"Envelopes", envBMP);
-    MenusOLED envFLT(MODE_ICON,"ENV for FLT",envBMP);
-    MenusOLED envVCA(MODE_ICON,"ENV for VCA",envBMP);
-    MenusOLED envLFO(MODE_ICON,"ENV for LFO",envBMP);
+    MenusOLED envFLT(MODE_LINE,"ENV for FLT",envBMP);
+    MenusOLED envVCA(MODE_LINE,"ENV for VCA",envBMP);
+    MenusOLED envLFO(MODE_LINE,"ENV for LFO",envBMP);
   
 MenusOLED menuEFF(MODE_TEXT,"Effects", keysBMP);
     MenusOLED effFade(MODE_DEFAULT,"Fade",keysBMP);
@@ -167,6 +168,15 @@ DisplayManager dispMgr(display, &menuHome);
 // End setup menu screens -------------------------------------------------------------------------
 
 
+// ================================================================================================
+// Setup Keyboard
+// ================================================================================================
+
+Keyboard KB;
+
+// End keyboard setup -----------------------------------------------------------------------------
+
+
 // Show the Teensynth logo and QR code for 3 seconds on startup
 void startupScreen(){
     display.clearDisplay();
@@ -187,7 +197,7 @@ void startupScreen(){
     display.drawBitmap(0,0,teensynthlogo,128,16,SSD1306_WHITE);
     display.display();
     
-    delay(2000);
+    delay(3000);
 }
 
 // Configures the PCA9555s and the encoders, sets up the display
@@ -208,9 +218,7 @@ void ioSetup(){
     if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println(F("SSD1306 allocation failed"));
         for(;;); // Don't proceed, loop forever
-    }
-
-    
+    }    
 }
 
 // Set up the menu structure
@@ -263,68 +271,82 @@ void setupOscillatorMenu(){
             std::function<void(float)> onValueChange = [](float val){return val;}// Callback param
         );*/
     osc0.setSlot(0, 0, 3,1, &vco0.wave, "WAVE", 
-        [](int8_t value) { return float(value); },
+        [](int8_t value) { if(value == WAVEFORM_SQUARE){value = WAVEFORM_PULSE;}return float(value); },
         [](float wave){waveform0.begin(int(wave));});        
     osc0.setSlot(1, 1, 5, 1, &vco0.octv, "OCTV", 
-        [](float value) { return volt_to_freq(value + vco0.tune/120.0);},
+        [](float value) { return voltToFreq(value + vco0.tune/120.0);},
         [](float scaledValue){waveform0.frequency(scaledValue);});        
     osc0.setSlot(2, -120, 120, 1, &vco0.tune, "TUNE", 
-        [](float value) { return volt_to_freq(value/120.0 + vco0.octv);},
+        [](float value) { return voltToFreq(value/120.0 + vco0.octv);},
         [](float scaledValue){waveform0.frequency(scaledValue);});        
     osc0.setSlot(3, 0, 100, 5, &vco0.pulseWidth, "PWM", 
-        [](float value) { return value/100; },
+        [](float value) { return value/100.0; },
         [](float pulseWidth){waveform0.pulseWidth(pulseWidth);});
 
     osc1.setSlot(0, 0, 3,1, &vco1.wave, "WAVE", 
-        [](int8_t value) { return float(value); },
+        [](int8_t value) { if(value == WAVEFORM_SQUARE){value = WAVEFORM_PULSE;}return float(value); },
         [](float wave){waveform1.begin(int(wave));});        
     osc1.setSlot(1, 1, 5, 1, &vco1.octv, "OCTV", 
-        [](float value) { return volt_to_freq(value + vco1.tune/121.0);},
+        [](float value) { return voltToFreq(value + vco1.tune/120.0);},
         [](float scaledValue){waveform1.frequency(scaledValue);});        
     osc1.setSlot(2, -120, 120, 1, &vco1.tune, "TUNE", 
-        [](float value) { return volt_to_freq(value/121.0 + vco1.octv);},
+        [](float value) { return voltToFreq(value/120.0 + vco1.octv);},
         [](float scaledValue){waveform1.frequency(scaledValue);});        
     osc1.setSlot(3, 0, 100, 5, &vco1.pulseWidth, "PWM", 
-        [](float value) { return value/100; },
+        [](float value) { return value/100.0; },
         [](float pulseWidth){waveform1.pulseWidth(pulseWidth);});
 
     osc2.setSlot(0, 0, 3,1, &vco2.wave, "WAVE", 
-        [](int8_t value) { return float(value); },
+        [](int8_t value) { if(value == WAVEFORM_SQUARE){value = WAVEFORM_PULSE;}return float(value); },
         [](float wave){waveform2.begin(int(wave));});        
     osc2.setSlot(1, 1, 5, 1, &vco2.octv, "OCTV", 
-        [](float value) { return volt_to_freq(value + vco2.tune/122.0);},
+        [](float value) { return voltToFreq(value + vco2.tune/120.0);},
         [](float scaledValue){waveform2.frequency(scaledValue);});        
     osc2.setSlot(2, -120, 120, 1, &vco2.tune, "TUNE", 
-        [](float value) { return volt_to_freq(value/122.0 + vco2.octv);},
+        [](float value) { return voltToFreq(value/120.0 + vco2.octv);},
         [](float scaledValue){waveform2.frequency(scaledValue);});        
     osc2.setSlot(3, 0, 100, 5, &vco2.pulseWidth, "PWM", 
-        [](float value) { return value/100; },
+        [](float value) { return value/100.0; },
         [](float pulseWidth){waveform2.pulseWidth(pulseWidth);});
 
     osc3.setSlot(0, 0, 3,1, &vco3.wave, "WAVE", 
-        [](int8_t value) { return float(value); },
+        [](int8_t value) { if(value == WAVEFORM_SQUARE){value = WAVEFORM_PULSE;}return float(value); },
         [](float wave){waveform3.begin(int(wave));});        
     osc3.setSlot(1, 1, 5, 1, &vco3.octv, "OCTV", 
-        [](float value) { return volt_to_freq(value + vco3.tune/123.0);},
+        [](float value) { return voltToFreq(value + vco3.tune/120.0);},
         [](float scaledValue){waveform3.frequency(scaledValue);});        
     osc3.setSlot(2, -120, 120, 1, &vco3.tune, "TUNE", 
-        [](float value) { return volt_to_freq(value/123.0 + vco3.octv);},
+        [](float value) { return voltToFreq(value/120.0 + vco3.octv);},
         [](float scaledValue){waveform3.frequency(scaledValue);});        
     osc3.setSlot(3, 0, 100, 5, &vco3.pulseWidth, "PWM", 
-        [](float value) { return value/100; },
+        [](float value) { return value/100.0; },
         [](float pulseWidth){waveform3.pulseWidth(pulseWidth);});
 
-    /*
-    lfo0.setSlot(0, 0, 3, 1, &lfo0Params.wave,"WAVE", [](float value) { return value; },[](float wave){lowFreqOsc0.begin(int(wave));});
-    lfo0.setSlot(1, -100, 100, 1, &lfo0Params.tune, "TUNE", &volt_to_freq,[](float scaledValue){lowFreqOsc0.frequency(scaledValue);}); 
-    lfo0.setSlot(2, 0, 1, 0.05, &lfo0Params.pulseWidth, "PWM", [](float value) { return value; },[](float pulseWidth){lowFreqOsc0.pulseWidth(pulseWidth);});
-    lfo0.setSlot(3, 0, 1, 0.01, &lfo0Params.gain, "GAIN");
+    lfo0.setSlot(0, 0, 3, 1, &lfo0Params.wave,"WAVE", 
+        [](int8_t value) { return float(value); },
+        [](float wave){lowFreqOsc0.begin(int(wave));});
+    lfo0.setSlot(1, 0, 120, 1, &lfo0Params.tune, "TUNE", 
+        [](int8_t value) { return float(value); },
+        [](float scaledValue){lowFreqOsc0.frequency(scaledValue);}); 
+    lfo0.setSlot(2, 0, 100, 5, &lfo0Params.pulseWidth, "PWM", 
+        [](float value) { return value/100.0; },
+        [](float pulseWidth){lowFreqOsc0.pulseWidth(pulseWidth);});
+    lfo0.setSlot(3, 0, 100, 5, &lfo0Params.gain, "GAIN",
+        [](int8_t value) { return float(value/100.0); },
+        [](float gain){lowFreqOsc0.amplitude(gain);});
     
-    lfo1.setSlot(0, 0, 3,1, 1, &lfo1Params.wave,0 ,"WAVE");
-    lfo1.setSlot(1, -100, 100, 1, 1, &lfo1Params.tune,0 , "TUNE");
-    lfo1.setSlot(2, 0, 1, 5, 1, &lfo1Params.pulseWidth, 50, "PWM");
-    lfo1.setSlot(3, 0, 1, 1, 1, &lfo1Params.gain, 25, "GAIN");
-    */
+    lfo1.setSlot(0, 0, 3, 1, &lfo0Params.wave,"WAVE", 
+        [](int8_t value) { return float(value); },
+        [](float wave){lowFreqOsc1.begin(int(wave));});
+    lfo1.setSlot(1, 0, 120, 1, &lfo0Params.tune, "TUNE", 
+        [](int8_t value) { return float(value); },
+        [](float scaledValue){lowFreqOsc1.frequency(scaledValue);}); 
+    lfo1.setSlot(2, 0, 100, 5, &lfo0Params.pulseWidth, "PWM", 
+        [](float value) { return value/100.0; },
+        [](float pulseWidth){lowFreqOsc1.pulseWidth(pulseWidth);});
+    lfo1.setSlot(3, 0, 100, 5, &lfo0Params.gain, "GAIN",
+        [](int8_t value) { return float(value/100.0); },
+        [](float gain){lowFreqOsc1.amplitude(gain);});    
 }
 
 void setupMixerMenu(){
@@ -343,26 +365,48 @@ void setupMixerMenu(){
 }
 
 void setupEnvelopeMenu(){
-    menuENV.addChild(&envFLT);
     menuENV.addChild(&envVCA);
+    menuENV.addChild(&envFLT);    
     menuENV.addChild(&envLFO);
     
-    /*
-    envFLT.setSlot(0, 0, 100, 1, 1, &envVCFParams.attack,0 ,"ATK"); 
-    envFLT.setSlot(1, 0, 100, 1, 1, &envVCFParams.decay, 1, "DLY");
-    envFLT.setSlot(2, 0, 100, 1, 1, &envVCFParams.sustain,0 , "SUS");
-    envFLT.setSlot(3, 0, 100, 1, 1, &envVCFParams.release, 50, "REL");
+    envVCA.setSlot(0, 0, 100, 1, &envVCAParams.attack,"ATK",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeAmp.attack(ms);});    
+    envVCA.setSlot(1, 0, 100, 1, &envVCAParams.decay, "DLY",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeAmp.decay(ms);}); 
+    envVCA.setSlot(2, 0, 100, 1, &envVCAParams.sustain, "SUS",
+        [](int8_t value) { return float(value*10.0); },
+        [](float ms){envelopeAmp.sustain(ms);}); 
+    envVCA.setSlot(3, 0, 100, 1, &envVCAParams.release, "REL",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeAmp.release(ms);});
+        
+    envFLT.setSlot(0, 0, 100, 1, &envFLTParams.attack,"ATK",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeFilter.attack(ms);});    
+    envFLT.setSlot(1, 0, 100, 1, &envFLTParams.decay, "DLY",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeFilter.decay(ms);}); 
+    envFLT.setSlot(2, 0, 100, 1, &envFLTParams.sustain, "SUS",
+        [](int8_t value) { return float(value*10.0); },
+        [](float ms){envelopeFilter.sustain(ms);}); 
+    envFLT.setSlot(3, 0, 100, 1, &envFLTParams.release, "REL",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeFilter.release(ms);});
 
-    envVCA.setSlot(0, 0, 100, 1, 1, &envVCAParams.attack,0 ,"ATK"); 
-    envVCA.setSlot(1, 0, 100, 1, 1, &envVCAParams.decay, 1, "DLY");
-    envVCA.setSlot(2, 0, 100, 1, 1, &envVCAParams.sustain,0 , "SUS");
-    envVCA.setSlot(3, 0, 100, 1, 1, &envVCAParams.release, 50, "REL");
-    
-    envLFO.setSlot(0, 0, 100, 1, 1, &envLFOParams.attack,0 ,"ATK"); 
-    envLFO.setSlot(1, 0, 100, 1, 1, &envLFOParams.decay, 1, "DLY");
-    envLFO.setSlot(2, 0, 100, 1, 1, &envLFOParams.sustain,0 , "SUS");
-    envLFO.setSlot(3, 0, 100, 1, 1, &envLFOParams.release, 50, "REL");
-    */
+    envLFO.setSlot(0, 0, 100, 1, &envLFOParams.attack,"ATK",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeLFO.attack(ms);});    
+    envLFO.setSlot(1, 0, 100, 1, &envLFOParams.decay, "DLY",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeLFO.decay(ms);}); 
+    envLFO.setSlot(2, 0, 100, 1, &envLFOParams.sustain, "SUS",
+        [](int8_t value) { return float(value*10.0); },
+        [](float ms){envelopeLFO.sustain(ms);}); 
+    envLFO.setSlot(3, 0, 100, 1, &envLFOParams.release, "REL",
+        [](int8_t value) { return float(value*20.0); },
+        [](float ms){envelopeLFO.release(ms);});
 }
 
 void setupEffectsMenu(){
@@ -398,13 +442,13 @@ void setupAudio(){
     AudioMemory(32);
     sgtl5000_1.enable();
     sgtl5000_1.volume(0.32);
-    waveform0.begin(WAVEFORM_SINE); waveform0.amplitude(0.25); waveform0.frequency(220);
-    waveform1.begin(WAVEFORM_SINE); waveform1.amplitude(0.25); waveform1.frequency(220);
-    waveform2.begin(WAVEFORM_SINE); waveform2.amplitude(0.25); waveform2.frequency(220);
-    waveform3.begin(WAVEFORM_SINE); waveform3.amplitude(0.25); waveform3.frequency(220);
+    waveform0.begin(WAVEFORM_SINE); waveform0.amplitude(1); waveform0.frequency(voltToFreq(3));
+    waveform1.begin(WAVEFORM_SINE); waveform1.amplitude(1); waveform1.frequency(voltToFreq(3));
+    waveform2.begin(WAVEFORM_SINE); waveform2.amplitude(1); waveform2.frequency(voltToFreq(3));
+    waveform3.begin(WAVEFORM_SINE); waveform3.amplitude(1); waveform3.frequency(voltToFreq(3));
 
-    mixer1.gain(0,1);
-    mixer1.gain(1,1);
-    mixer1.gain(2,1);
-    mixer1.gain(3,1);
+    mixer1.gain(0,0);
+    mixer1.gain(1,0);
+    mixer1.gain(2,0);
+    mixer1.gain(3,0);
 }

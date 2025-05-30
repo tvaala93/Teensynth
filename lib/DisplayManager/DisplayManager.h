@@ -47,7 +47,7 @@
 |INP4| *  |    |    |V|
 +---------------------+
 
-// ADSR-focussed menu
+// ADSR-focussed menu (Line)
 +---------------------+
 |<     ADSRMenu    **>|
 |#####################|
@@ -89,6 +89,7 @@ class DisplayManager{
             currentMenu(mainMenu),
             baseMenu(mainMenu) {}
         void drawIcon(int slot, int dir);
+        std::array<int8_t,2> drawADSR(int slot);
         //void drawText(int x, int y, const String& text, bool highlight);        
         //void clear();
         //void display();
@@ -96,9 +97,11 @@ class DisplayManager{
         void drawMenuArea(bool color);
         void drawLogo(bool color);
         void drawLRArrows(bool color);
+        
         void show(bool color);        
         void showText();
         void showIcons();
+        void showADSR();
         void highlight(int8_t i);
 
         // Screen Navigation

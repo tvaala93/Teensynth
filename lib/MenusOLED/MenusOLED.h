@@ -235,6 +235,7 @@ struct Icon {
     const char* above;  
 };
 
+/*
 enum EffectorTypes {
     TYP_OSC,
     TYP_LFO,
@@ -242,6 +243,7 @@ enum EffectorTypes {
     TYP_ENV,
     TYP_MIX
 };
+*/
 
 // Pointers to the value modified by each encoder        
 // A Slot describes how to handle an encoder's input
